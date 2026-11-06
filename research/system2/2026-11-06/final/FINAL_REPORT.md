@@ -6,7 +6,7 @@
 
 ## What was built
 
-The frozen code commit fixes the frontier/reset control flow so an exhausted root does not trigger a zero-action attempt and a repeated RESET is not issued without intervening progress. It also adds `CYRUS_SEARCH_ORDER=1` as an opt-in search order. With the flag off, the bug fix runs with the pre-existing attempt depth of 50. With the flag on, the explorer uses iterative frontier-depth limits of 6, 12, 24, and 50 and simple-action-first widening before expanding click candidates. Both settings use the same code commit, System 2 takeover off, learned ranking off, relational planner off, local LLM off, seed 0, fresh per-game memory, and a 5,000-action budget. RESETs count toward that budget and the scorecard. The runtime was Python 3.12.10 with `arc-agi` 0.9.9.
+The frozen code commit fixes the frontier/reset control flow so an exhausted root does not trigger a zero-action attempt and a repeated RESET is not issued without intervening progress. It also adds `CYRUS_SEARCH_ORDER=1` as an opt-in search order. With the flag off, the bug fix runs with the pre-existing attempt depth of 50. With the flag on, the explorer uses iterative frontier-depth limits of 6, 12, 24, and 50 and simple-action-first widening before expanding click candidates. Both settings use the same code commit, System 2 takeover off, learned ranking off, relational planner off, local LLM off, seed 0, fresh per-game memory, and a 5,000-action budget. Before the code freeze, the focused unittest set passed (7 tests) and the changed Python files passed `py_compile`. RESETs count toward that budget and the scorecard. The runtime was Python 3.12.10 with `arc-agi` 0.9.9.
 
 ## Facts: paired 25-game results
 
@@ -83,4 +83,5 @@ The reset-control fix is supported by the measured zero zero-length frontier att
 ## Paper evidence inventory
 
 [`paper_citation_manifest.csv`](paper_citation_manifest.csv) is the exact file-by-file inventory of the final evaluation artifacts and the project files needed to describe or audit this result. It lists all 50 run records and their action/frontier traces, the 10 batch logs and run summaries, consolidated tables, relevant source and test files, the Phase 0 oracle/diagnostic artifacts, and the Phase 1c comparison report/data. The agent does not import or use the oracle in the evaluation.
+
 
