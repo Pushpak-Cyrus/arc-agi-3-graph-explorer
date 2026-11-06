@@ -104,6 +104,7 @@ class ActionProbePolicyTests(unittest.TestCase):
     def test_iterative_widening_keeps_clicks_back_until_simple_actions_are_tried(self):
         agent = _agent_for_policy()
         agent.frontier_mode_enabled = True
+        agent.search_order_enabled = True
         state = _state()
         node = agent.graph.add_state(state["hash"])
         node.add_action((1, None, None), 0)

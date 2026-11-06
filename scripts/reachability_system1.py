@@ -36,6 +36,9 @@ OUT = Path(os.getenv(
 ))
 RUN_ID = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 RUN_DIR = OUT / RUN_ID
+SEARCH_ORDER = os.getenv("CYRUS_SEARCH_ORDER", "0").strip().lower() in {
+    "1", "true", "yes", "on"
+}
 
 
 def load_agent():
@@ -100,9 +103,10 @@ def run_one(arcade, infos, agent_class, game_id, budget):
         "CYRUS_EXPERIMENT_LOG": str(memory / "experiments.jsonl"),
         "CYRUS_SYSTEM2_LOG": str(memory / "system2.jsonl"),
         "CYRUS_NOOP_DEPRIORITIZE_AFTER": "3",
-        # Phase 1c starts with the predeclared iterative-deepening cap D=6;
-        # CyrusAgent raises it through 12, 24, and 50 only on exhaustion.
-        "CYRUS_FRONTIER_ATTEMPT_CAP": "6",
+        "CYRUS_SEARCH_ORDER": "1" if SEARCH_ORDER else "0",
+        # The optional search order starts at D=6 and widens to 12/24/50.
+        # Bug-fix-only runs retain the previous D=50 attempt cap.
+        "CYRUS_FRONTIER_ATTEMPT_CAP": "6" if SEARCH_ORDER else "50",
     })
     random.seed(SEED)
     agent_class.shared_budget_tracker = None
@@ -222,6 +226,7 @@ def run_one(arcade, infos, agent_class, game_id, budget):
         "budget": budget,
         "system2_takeover": False,
         "frontier_mode": True,
+        "search_order": SEARCH_ORDER,
         "learned_ranking": False,
         "relational_planner": False,
         "levels_completed": int(final.levels_completed),
@@ -283,7 +288,11 @@ def main():
                         help="Optional comma-separated cached game subset.")
     parser.add_argument("--budgets", default="2000,5000",
                         help="Comma-separated action budgets (default: 2000,5000).")
+    parser.add_argument("--search-order", action="store_true",
+                        help="Enable CYRUS_SEARCH_ORDER=1 for iterative deepening/widening.")
     args = parser.parse_args()
+    global SEARCH_ORDER
+    SEARCH_ORDER = bool(args.search_order)
     budgets = tuple(int(value.strip()) for value in args.budgets.split(",")
                     if value.strip())
     if not budgets or any(value < 1 for value in budgets):
@@ -341,6 +350,7 @@ def main():
     summary = {
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "seed": SEED,
+        "search_order": SEARCH_ORDER,
         "budgets": list(budgets),
         "games": games,
         "development_games": ["ar25", "cn04", "dc22", "ls20", "re86"],

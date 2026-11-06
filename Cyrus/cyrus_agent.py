@@ -159,9 +159,14 @@ class CyrusAgent(Agent):
         self.frontier_mode_enabled = os.getenv(
             "CYRUS_FRONTIER_MODE", "0"
         ).strip().lower() in {"1", "true", "yes", "on"}
+        self.search_order_enabled = os.getenv(
+            "CYRUS_SEARCH_ORDER", "0"
+        ).strip().lower() in {"1", "true", "yes", "on"}
         self.frontier_reset_due = False
         self._last_selection_was_replay = False
-        self.frontier_depth_schedule = (6, 12, 24, 50)
+        self.frontier_depth_schedule = (
+            (6, 12, 24, 50) if self.search_order_enabled else (50,)
+        )
         self.frontier_depth_index = 0
         self.frontier_depth_limit = self.frontier_depth_schedule[0]
         self.frontier_attempt_cap = max(1, int(os.getenv(
@@ -1109,7 +1114,8 @@ class CyrusAgent(Agent):
         # Coordinate clicks enter this state once its simple controls have
         # each been tried, unless a click class has already changed a frame
         # elsewhere. Existing class no-op evidence affects ranking only.
-        if getattr(self, "frontier_mode_enabled", False):
+        if (getattr(self, "frontier_mode_enabled", False)
+                and getattr(self, "search_order_enabled", False)):
             node = getattr(self, "graph", None)
             node = (node.nodes.get(state.get("hash"))
                     if node is not None else None)
