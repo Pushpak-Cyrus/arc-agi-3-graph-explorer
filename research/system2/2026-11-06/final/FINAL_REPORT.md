@@ -75,7 +75,7 @@ The reset-control fix is supported by the measured zero zero-length frontier att
 - Each game had one cached layout, seed 0, and one run per setting. The 25 games are not multiple independent layouts of the same task.
 - The search-order change is not accepted on the predeclared cd82, sp80, and tu93 thresholds. sp80 is a late completion, not a pass.
 - The dev set had no confirmed level in either condition. Confirmed progress remains sparse and concentrated in a small number of games.
-- The action cap caused most runs to stop at 5,000. ft09 stopped at 37 actions in both settings; sc25 stopped at 879 off and 124 on. The runner recorded these as `harness_or_agent_limit`, with no exception. Their behavior before termination is preserved in the traces.
+- The action cap caused most runs to stop at 5,000. ft09 stopped at 37 actions in both settings; sc25 stopped at 879 off and 124 on. The runner recorded these as `harness_or_agent_limit`, with no exception. The specific cause of those early stops was not isolated in this final evaluation; their preceding behavior is preserved in the traces.
 - Offline cached environments and the local scorecard calculation are the basis of these results. No submission score, online evaluation, or multi-layout generalization was measured.
 - “Unique states per 1,000 actions” is a search-activity diagnostic, not task-solving performance.
 - No further agent-code changes are made after this commit. The report and result artifacts are documentation/evidence only.
@@ -83,5 +83,6 @@ The reset-control fix is supported by the measured zero zero-length frontier att
 ## Paper evidence inventory
 
 [`paper_citation_manifest.csv`](paper_citation_manifest.csv) is the exact file-by-file inventory of the final evaluation artifacts and the project files needed to describe or audit this result. It lists all 50 run records and their action/frontier traces, the 10 batch logs and run summaries, consolidated tables, relevant source and test files, the Phase 0 oracle/diagnostic artifacts, and the Phase 1c comparison report/data. The agent does not import or use the oracle in the evaluation.
+
 
 
