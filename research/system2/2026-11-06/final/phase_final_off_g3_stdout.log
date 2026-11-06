@@ -1,0 +1,22 @@
+INFO:arc_agi.scorecard:Initialized ScorecardManager with idle_for=0:15:00 and max_open_for=3 days, 0:00:00
+2026-11-06 11:54:29 | INFO | Created new scorecard: e2399a67-0a99-4707-8a67-e5bcd9905c56
+2026-11-06 11:54:30 | INFO | Found latest version of ls20: ls20-9607627b (downloaded: 2026-10-30 06:02:55.745285+00:00)
+2026-11-06 11:54:30 | INFO | Successfully loaded game class Ls20 from environment_files\ls20\9607627b\ls20.py
+[5000 01/5] ls20: levels=0 first=None actions=5000 resets=112 end=action_cap
+2026-11-06 11:56:33 | INFO | Created new scorecard: ff9c07ce-8160-4aa4-86e9-9608a36d9064
+2026-11-06 11:56:33 | INFO | Found latest version of m0r0: m0r0-492f87ba (downloaded: 2026-10-25 12:24:48.037291+00:00)
+2026-11-06 11:56:33 | INFO | Successfully loaded game class M0r0 from environment_files\m0r0\492f87ba\m0r0.py
+[5000 02/5] m0r0: levels=0 first=None actions=5000 resets=166 end=action_cap
+2026-11-06 12:00:07 | INFO | Created new scorecard: fb534821-8e59-4b5c-8394-dfebc82caa06
+2026-11-06 12:00:07 | INFO | Found latest version of r11l: r11l-495a7899 (downloaded: 2026-10-25 12:25:01.632035+00:00)
+2026-11-06 12:00:07 | INFO | Successfully loaded game class R11l from environment_files\r11l\495a7899\r11l.py
+[5000 03/5] r11l: levels=1 first=48 actions=5000 resets=126 end=action_cap
+2026-11-06 12:07:34 | INFO | Created new scorecard: d3df464d-5416-4d79-ab48-95389aade14b
+2026-11-06 12:07:34 | INFO | Found latest version of re86: re86-8af5384d (downloaded: 2026-10-30 06:02:55.792928+00:00)
+2026-11-06 12:07:34 | INFO | Successfully loaded game class Re86 from environment_files\re86\8af5384d\re86.py
+[5000 04/5] re86: levels=0 first=None actions=5000 resets=94 end=action_cap
+2026-11-06 12:09:06 | INFO | Created new scorecard: eb7af0c2-7f19-44fa-a865-642a1ab1f3a5
+2026-11-06 12:09:06 | INFO | Found latest version of s5i5: s5i5-18d95033 (downloaded: 2026-10-25 12:25:35.644408+00:00)
+2026-11-06 12:09:06 | INFO | Successfully loaded game class S5i5 from environment_files\s5i5\18d95033\s5i5.py
+[5000 05/5] s5i5: levels=0 first=None actions=5000 resets=143 end=action_cap
+REPORT_DIR=C:\Users\ASUS\OneDrive\Documents\ARC-AGI-3-Kaggle-Starter\research\system2\2026-11-06\final\phase_final_off_g3\20261106T062429Z

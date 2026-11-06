@@ -29,3 +29,12 @@ This ledger records identifiable implementation milestones and saved evaluation/
 ## Frozen Phase 1c source commit
 
 `db03b91c464b23d25f5bbf1dc215f1d5b5b48267` — **Fix Phase 1c frontier replay control**. Source files were not modified after this commit. Documentation and result aggregation were written after evaluation without changing the frozen code.
+## Final paired build and evaluation — 2026-11-06
+
+- **Frozen code commit:** `5a70a692278e11b90afc836430c934ae1263f3b1`, tagged `cyrus-final-2026-11-06`.
+- **Runs:** `research/system2/2026-11-06/final/phase_final_{off,on}_g1..g5/20261106T062429Z`; five disjoint game groups in each condition.
+- **Change:** reset-control fix plus optional `CYRUS_SEARCH_ORDER=1` depth schedule/widening. No goal inference or planner. System 2 takeover, learned ranking, relational planner, and local LLM off in both settings.
+- **Protocol:** same commit for all 50 runs; seed 0, one cached layout per game, fresh memory per game, 5,000-action cap including RESETs.
+- **Results:** flag off = 5 levels and mean official scorecard 0.055630%; flag on = 5 levels and 0.003169%. No run raised an exception; zero-length frontier attempts were 0/50. The dev set had no level advances. Acceptance thresholds failed: cd82 0, sp80 only on at 4,187 actions (threshold 714), tu93 0; ls20 0 in both conditions.
+- **Artifacts:** `research/system2/2026-11-06/final/FINAL_REPORT.md`, `all25_comparison.csv`, `all25_comparison.json`, `condition_summary.csv`, and `paper_citation_manifest.csv` plus per-game traces and batch records under the run folders.
+- **Freeze:** the agent source remains the tagged commit above. Post-run changes only document/aggregate results.

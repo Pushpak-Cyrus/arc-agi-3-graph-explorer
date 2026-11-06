@@ -1,0 +1,15 @@
+INFO:arc_agi.base:Created new scorecard: 5cb05a90-4a5a-40ce-bab5-efdb9a6f9d0e
+INFO:arc_agi.base:Found latest version of sb26: sb26-7fbdac44 (downloaded: 2026-10-25 12:25:45.687219+00:00)
+INFO:arc_agi.base:Successfully loaded game class Sb26 from environment_files\sb26\7fbdac44\sb26.py
+INFO:arc_agi.base:Created new scorecard: 60a70715-c28b-4c0b-932b-8e6d261de67c
+INFO:arc_agi.base:Found latest version of sc25: sc25-635fd71a (downloaded: 2026-10-25 12:26:07.489172+00:00)
+INFO:arc_agi.base:Successfully loaded game class Sc25 from environment_files\sc25\635fd71a\sc25.py
+INFO:arc_agi.base:Created new scorecard: 239e4b2c-0af2-418c-8664-57613a728dfe
+INFO:arc_agi.base:Found latest version of sk48: sk48-d8078629 (downloaded: 2026-10-25 12:26:28.585362+00:00)
+INFO:arc_agi.base:Successfully loaded game class Sk48 from environment_files\sk48\d8078629\sk48.py
+INFO:arc_agi.base:Created new scorecard: 2d77c938-edec-450e-94d5-3a74d7746e3d
+INFO:arc_agi.base:Found latest version of sp80: sp80-589a99af (downloaded: 2026-10-25 12:26:52.363766+00:00)
+INFO:arc_agi.base:Successfully loaded game class Sp80 from environment_files\sp80\589a99af\sp80.py
+INFO:arc_agi.base:Created new scorecard: 08ca40bd-4d20-4d11-aadf-fde4a932817b
+INFO:arc_agi.base:Found latest version of su15: su15-1944f8ab (downloaded: 2026-10-25 12:27:00.013007+00:00)
+INFO:arc_agi.base:Successfully loaded game class Su15 from environment_files\su15\1944f8ab\su15.py

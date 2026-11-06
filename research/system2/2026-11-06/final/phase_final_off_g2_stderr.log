@@ -1,0 +1,15 @@
+INFO:arc_agi.base:Created new scorecard: bd9bc66f-cec3-459d-a687-51fef09c05d9
+INFO:arc_agi.base:Found latest version of ft09: ft09-0d8bbf25 (downloaded: 2026-10-25 12:22:54.967547+00:00)
+INFO:arc_agi.base:Successfully loaded game class Ft09 from environment_files\ft09\0d8bbf25\ft09.py
+INFO:arc_agi.base:Created new scorecard: 95242279-2a13-4258-94a5-866bb254a4d6
+INFO:arc_agi.base:Found latest version of g50t: g50t-5849a774 (downloaded: 2026-10-25 12:23:17.179017+00:00)
+INFO:arc_agi.base:Successfully loaded game class G50t from environment_files\g50t\5849a774\g50t.py
+INFO:arc_agi.base:Created new scorecard: 45800a39-e82d-455c-89f5-bc6aafa3532d
+INFO:arc_agi.base:Found latest version of ka59: ka59-38d34dbb (downloaded: 2026-10-25 12:23:33.465034+00:00)
+INFO:arc_agi.base:Successfully loaded game class Ka59 from environment_files\ka59\38d34dbb\ka59.py
+INFO:arc_agi.base:Created new scorecard: 95ab3672-1f8f-4f5e-92c6-ec27ce2b1856
+INFO:arc_agi.base:Found latest version of lf52: lf52-271a04aa (downloaded: 2026-10-25 12:23:45.874606+00:00)
+INFO:arc_agi.base:Successfully loaded game class Lf52 from environment_files\lf52\271a04aa\lf52.py
+INFO:arc_agi.base:Created new scorecard: c976dc6e-3abb-4ae1-966f-d9692b362a4a
+INFO:arc_agi.base:Found latest version of lp85: lp85-305b61c3 (downloaded: 2026-10-25 12:24:06.981234+00:00)
+INFO:arc_agi.base:Successfully loaded game class Lp85 from environment_files\lp85\305b61c3\lp85.py

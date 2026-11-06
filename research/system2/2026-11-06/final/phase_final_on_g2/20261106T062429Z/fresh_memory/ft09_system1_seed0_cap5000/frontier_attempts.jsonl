@@ -1,0 +1,4 @@
+{"actions": 6, "depth_limit": 6, "end_state": "0299caa91c4095354a9010406ed06a28", "frontier_state": "0299caa91c4095354a9010406ed06a28", "reason": "attempt_cap"}
+{"actions": 6, "depth_limit": 6, "end_state": "0299caa91c4095354a9010406ed06a28", "frontier_state": "0299caa91c4095354a9010406ed06a28", "reason": "attempt_cap"}
+{"actions": 5, "depth_limit": 6, "end_state": "0299caa91c4095354a9010406ed06a28", "frontier_state": "0299caa91c4095354a9010406ed06a28", "reason": "state_fully_explored"}
+{"actions": 19, "depth_limit": 50, "end_state": "0299caa91c4095354a9010406ed06a28", "frontier_state": "0299caa91c4095354a9010406ed06a28", "reason": "state_fully_explored"}

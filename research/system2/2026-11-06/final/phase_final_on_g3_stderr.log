@@ -1,0 +1,15 @@
+INFO:arc_agi.base:Created new scorecard: 7547215e-c4a2-455e-a77d-66bef4da723c
+INFO:arc_agi.base:Found latest version of ls20: ls20-9607627b (downloaded: 2026-10-30 06:02:55.745285+00:00)
+INFO:arc_agi.base:Successfully loaded game class Ls20 from environment_files\ls20\9607627b\ls20.py
+INFO:arc_agi.base:Created new scorecard: 1c0a7fa6-a79a-485d-a47d-22e03ac28631
+INFO:arc_agi.base:Found latest version of m0r0: m0r0-492f87ba (downloaded: 2026-10-25 12:24:48.037291+00:00)
+INFO:arc_agi.base:Successfully loaded game class M0r0 from environment_files\m0r0\492f87ba\m0r0.py
+INFO:arc_agi.base:Created new scorecard: 711edb89-6853-4b8c-819a-653bc838d943
+INFO:arc_agi.base:Found latest version of r11l: r11l-495a7899 (downloaded: 2026-10-25 12:25:01.632035+00:00)
+INFO:arc_agi.base:Successfully loaded game class R11l from environment_files\r11l\495a7899\r11l.py
+INFO:arc_agi.base:Created new scorecard: 63f9becd-e431-4e33-b991-ed93bac74103
+INFO:arc_agi.base:Found latest version of re86: re86-8af5384d (downloaded: 2026-10-30 06:02:55.792928+00:00)
+INFO:arc_agi.base:Successfully loaded game class Re86 from environment_files\re86\8af5384d\re86.py
+INFO:arc_agi.base:Created new scorecard: 14a14f70-1caf-4231-8779-c8c17b4893f9
+INFO:arc_agi.base:Found latest version of s5i5: s5i5-18d95033 (downloaded: 2026-10-25 12:25:35.644408+00:00)
+INFO:arc_agi.base:Successfully loaded game class S5i5 from environment_files\s5i5\18d95033\s5i5.py

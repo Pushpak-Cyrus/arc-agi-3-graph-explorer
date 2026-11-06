@@ -1,0 +1,22 @@
+INFO:arc_agi.scorecard:Initialized ScorecardManager with idle_for=0:15:00 and max_open_for=3 days, 0:00:00
+2026-11-06 11:54:29 | INFO | Created new scorecard: e9eac174-177e-48b4-aab3-0c5579562a54
+2026-11-06 11:54:30 | INFO | Found latest version of ft09: ft09-0d8bbf25 (downloaded: 2026-10-25 12:22:54.967547+00:00)
+2026-11-06 11:54:30 | INFO | Successfully loaded game class Ft09 from environment_files\ft09\0d8bbf25\ft09.py
+[5000 01/5] ft09: levels=0 first=None actions=37 resets=1 end=harness_or_agent_limit
+2026-11-06 11:54:32 | INFO | Created new scorecard: ae7252fd-5128-41da-b800-46907e0bca52
+2026-11-06 11:54:32 | INFO | Found latest version of g50t: g50t-5849a774 (downloaded: 2026-10-25 12:23:17.179017+00:00)
+2026-11-06 11:54:32 | INFO | Successfully loaded game class G50t from environment_files\g50t\5849a774\g50t.py
+[5000 02/5] g50t: levels=0 first=None actions=5000 resets=374 end=action_cap
+2026-11-06 11:57:09 | INFO | Created new scorecard: 51c5897c-31dd-4698-b559-5f14b242f931
+2026-11-06 11:57:09 | INFO | Found latest version of ka59: ka59-38d34dbb (downloaded: 2026-10-25 12:23:33.465034+00:00)
+2026-11-06 11:57:09 | INFO | Successfully loaded game class Ka59 from environment_files\ka59\38d34dbb\ka59.py
+[5000 03/5] ka59: levels=0 first=None actions=5000 resets=648 end=action_cap
+2026-11-06 12:00:50 | INFO | Created new scorecard: 16988d0c-cd51-4e09-8737-aaed36fbdcbd
+2026-11-06 12:00:50 | INFO | Found latest version of lf52: lf52-271a04aa (downloaded: 2026-10-25 12:23:45.874606+00:00)
+2026-11-06 12:00:50 | INFO | Successfully loaded game class Lf52 from environment_files\lf52\271a04aa\lf52.py
+[5000 04/5] lf52: levels=1 first=159 actions=5000 resets=763 end=action_cap
+2026-11-06 12:04:49 | INFO | Created new scorecard: b7ae7579-0b38-41fe-b2b7-d10f8f50bb67
+2026-11-06 12:04:49 | INFO | Found latest version of lp85: lp85-305b61c3 (downloaded: 2026-10-25 12:24:06.981234+00:00)
+2026-11-06 12:04:49 | INFO | Successfully loaded game class Lp85 from environment_files\lp85\305b61c3\lp85.py
+[5000 05/5] lp85: levels=1 first=679 actions=5000 resets=474 end=action_cap
+REPORT_DIR=C:\Users\ASUS\OneDrive\Documents\ARC-AGI-3-Kaggle-Starter\research\system2\2026-11-06\final\phase_final_on_g2\20261106T062429Z

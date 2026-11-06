@@ -1,0 +1,22 @@
+INFO:arc_agi.scorecard:Initialized ScorecardManager with idle_for=0:15:00 and max_open_for=3 days, 0:00:00
+2026-11-06 11:54:29 | INFO | Created new scorecard: 5cb05a90-4a5a-40ce-bab5-efdb9a6f9d0e
+2026-11-06 11:54:30 | INFO | Found latest version of sb26: sb26-7fbdac44 (downloaded: 2026-10-25 12:25:45.687219+00:00)
+2026-11-06 11:54:30 | INFO | Successfully loaded game class Sb26 from environment_files\sb26\7fbdac44\sb26.py
+[5000 01/5] sb26: levels=0 first=None actions=5000 resets=135 end=action_cap
+2026-11-06 11:57:53 | INFO | Created new scorecard: 60a70715-c28b-4c0b-932b-8e6d261de67c
+2026-11-06 11:57:53 | INFO | Found latest version of sc25: sc25-635fd71a (downloaded: 2026-10-25 12:26:07.489172+00:00)
+2026-11-06 11:57:54 | INFO | Successfully loaded game class Sc25 from environment_files\sc25\635fd71a\sc25.py
+[5000 02/5] sc25: levels=0 first=None actions=879 resets=18 end=harness_or_agent_limit
+2026-11-06 11:58:43 | INFO | Created new scorecard: 239e4b2c-0af2-418c-8664-57613a728dfe
+2026-11-06 11:58:43 | INFO | Found latest version of sk48: sk48-d8078629 (downloaded: 2026-10-25 12:26:28.585362+00:00)
+2026-11-06 11:58:43 | INFO | Successfully loaded game class Sk48 from environment_files\sk48\d8078629\sk48.py
+[5000 03/5] sk48: levels=0 first=None actions=5000 resets=140 end=action_cap
+2026-11-06 12:02:31 | INFO | Created new scorecard: 2d77c938-edec-450e-94d5-3a74d7746e3d
+2026-11-06 12:02:31 | INFO | Found latest version of sp80: sp80-589a99af (downloaded: 2026-10-25 12:26:52.363766+00:00)
+2026-11-06 12:02:31 | INFO | Successfully loaded game class Sp80 from environment_files\sp80\589a99af\sp80.py
+[5000 04/5] sp80: levels=0 first=None actions=5000 resets=185 end=action_cap
+2026-11-06 12:05:34 | INFO | Created new scorecard: 08ca40bd-4d20-4d11-aadf-fde4a932817b
+2026-11-06 12:05:34 | INFO | Found latest version of su15: su15-1944f8ab (downloaded: 2026-10-25 12:27:00.013007+00:00)
+2026-11-06 12:05:34 | INFO | Successfully loaded game class Su15 from environment_files\su15\1944f8ab\su15.py
+[5000 05/5] su15: levels=0 first=None actions=5000 resets=167 end=action_cap
+REPORT_DIR=C:\Users\ASUS\OneDrive\Documents\ARC-AGI-3-Kaggle-Starter\research\system2\2026-11-06\final\phase_final_off_g4\20261106T062429Z

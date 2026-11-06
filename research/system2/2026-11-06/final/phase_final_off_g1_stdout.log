@@ -1,0 +1,22 @@
+INFO:arc_agi.scorecard:Initialized ScorecardManager with idle_for=0:15:00 and max_open_for=3 days, 0:00:00
+2026-11-06 11:54:29 | INFO | Created new scorecard: 7481e14c-0c03-4bc8-8fe2-51ce3620d7f1
+2026-11-06 11:54:30 | INFO | Found latest version of ar25: ar25-0c556536 (downloaded: 2026-10-30 06:08:16.754792+00:00)
+2026-11-06 11:54:30 | INFO | Successfully loaded game class Ar25 from environment_files\ar25\0c556536\ar25.py
+[5000 01/5] ar25: levels=0 first=None actions=5000 resets=105 end=action_cap
+2026-11-06 11:58:13 | INFO | Created new scorecard: de2b7a51-3e76-42ae-841b-9bd72dadfe27
+2026-11-06 11:58:13 | INFO | Found latest version of bp35: bp35-0a0ad940 (downloaded: 2026-10-25 12:21:43.223632+00:00)
+2026-11-06 11:58:13 | INFO | Successfully loaded game class Bp35 from environment_files\bp35\0a0ad940\bp35.py
+[5000 02/5] bp35: levels=0 first=None actions=5000 resets=98 end=action_cap
+2026-11-06 12:09:30 | INFO | Created new scorecard: 662e3755-0b22-4fbc-ac23-4c9116725702
+2026-11-06 12:09:30 | INFO | Found latest version of cd82: cd82-fb555c5d (downloaded: 2026-10-25 12:22:14.635263+00:00)
+2026-11-06 12:09:30 | INFO | Successfully loaded game class Cd82 from environment_files\cd82\fb555c5d\cd82.py
+[5000 03/5] cd82: levels=0 first=None actions=5000 resets=127 end=action_cap
+2026-11-06 12:11:47 | INFO | Created new scorecard: 3f15041e-3d2d-4e36-a53f-fea7905c9049
+2026-11-06 12:11:47 | INFO | Found latest version of cn04: cn04-2fe56bfb (downloaded: 2026-10-30 06:02:55.808980+00:00)
+2026-11-06 12:11:47 | INFO | Successfully loaded game class Cn04 from environment_files\cn04\2fe56bfb\cn04.py
+[5000 04/5] cn04: levels=0 first=None actions=5000 resets=112 end=action_cap
+2026-11-06 12:22:59 | INFO | Created new scorecard: b9803c43-078f-4c81-a207-dfefa978e67d
+2026-11-06 12:22:59 | INFO | Found latest version of dc22: dc22-fdcac232 (downloaded: 2026-10-30 06:02:54.044122+00:00)
+2026-11-06 12:22:59 | INFO | Successfully loaded game class Dc22 from environment_files\dc22\fdcac232\dc22.py
+[5000 05/5] dc22: levels=0 first=None actions=5000 resets=118 end=action_cap
+REPORT_DIR=C:\Users\ASUS\OneDrive\Documents\ARC-AGI-3-Kaggle-Starter\research\system2\2026-11-06\final\phase_final_off_g1\20261106T062429Z

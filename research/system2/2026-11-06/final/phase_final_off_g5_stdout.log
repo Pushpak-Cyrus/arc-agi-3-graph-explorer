@@ -1,0 +1,22 @@
+INFO:arc_agi.scorecard:Initialized ScorecardManager with idle_for=0:15:00 and max_open_for=3 days, 0:00:00
+2026-11-06 11:54:29 | INFO | Created new scorecard: 75ed8ed3-39df-45e3-b71f-91b6ab80a8cb
+2026-11-06 11:54:30 | INFO | Found latest version of tn36: tn36-ef4dde99 (downloaded: 2026-10-25 12:27:09.339669+00:00)
+2026-11-06 11:54:30 | INFO | Successfully loaded game class Tn36 from environment_files\tn36\ef4dde99\tn36.py
+[5000 01/5] tn36: levels=1 first=140 actions=5000 resets=98 end=action_cap
+2026-11-06 12:01:44 | INFO | Created new scorecard: 2cf9036c-ab07-498a-bed5-31524f5ec8d7
+2026-11-06 12:01:44 | INFO | Found latest version of tr87: tr87-cd924810 (downloaded: 2026-10-25 12:27:24.939334+00:00)
+2026-11-06 12:01:44 | INFO | Successfully loaded game class Tr87 from environment_files\tr87\cd924810\tr87.py
+[5000 02/5] tr87: levels=0 first=None actions=5000 resets=94 end=action_cap
+2026-11-06 12:04:05 | INFO | Created new scorecard: c3768d89-1d0e-4a14-9aae-24f89e03a086
+2026-11-06 12:04:05 | INFO | Found latest version of tu93: tu93-0768757b (downloaded: 2026-10-25 12:28:01.134247+00:00)
+2026-11-06 12:04:05 | INFO | Successfully loaded game class Tu93 from environment_files\tu93\0768757b\tu93.py
+[5000 03/5] tu93: levels=0 first=None actions=5000 resets=167 end=action_cap
+2026-11-06 12:06:14 | INFO | Created new scorecard: 53aac8e3-d98c-439f-954b-db2509a0d0b9
+2026-11-06 12:06:14 | INFO | Found latest version of vc33: vc33-5430563c (downloaded: 2026-10-25 12:28:28.497870+00:00)
+2026-11-06 12:06:14 | INFO | Successfully loaded game class Vc33 from environment_files\vc33\5430563c\vc33.py
+[5000 04/5] vc33: levels=1 first=2099 actions=5000 resets=128 end=action_cap
+2026-11-06 12:08:54 | INFO | Created new scorecard: 2f605c54-cb51-4c7d-880d-d1278c8dd373
+2026-11-06 12:08:54 | INFO | Found latest version of wa30: wa30-ee6fef47 (downloaded: 2026-10-25 12:28:39.605238+00:00)
+2026-11-06 12:08:54 | INFO | Successfully loaded game class Wa30 from environment_files\wa30\ee6fef47\wa30.py
+[5000 05/5] wa30: levels=0 first=None actions=5000 resets=152 end=action_cap
+REPORT_DIR=C:\Users\ASUS\OneDrive\Documents\ARC-AGI-3-Kaggle-Starter\research\system2\2026-11-06\final\phase_final_off_g5\20261106T062429Z

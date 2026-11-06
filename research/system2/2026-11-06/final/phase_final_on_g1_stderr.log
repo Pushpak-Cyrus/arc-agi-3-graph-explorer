@@ -1,0 +1,15 @@
+INFO:arc_agi.base:Created new scorecard: f18db336-3812-4cfb-95b4-1e96dadc8080
+INFO:arc_agi.base:Found latest version of ar25: ar25-0c556536 (downloaded: 2026-10-30 06:08:16.754792+00:00)
+INFO:arc_agi.base:Successfully loaded game class Ar25 from environment_files\ar25\0c556536\ar25.py
+INFO:arc_agi.base:Created new scorecard: 4f5fde8d-ccde-461c-a42e-4aad587434f4
+INFO:arc_agi.base:Found latest version of bp35: bp35-0a0ad940 (downloaded: 2026-10-25 12:21:43.223632+00:00)
+INFO:arc_agi.base:Successfully loaded game class Bp35 from environment_files\bp35\0a0ad940\bp35.py
+INFO:arc_agi.base:Created new scorecard: 368bfc13-71d5-40a5-a741-22dcd48dc156
+INFO:arc_agi.base:Found latest version of cd82: cd82-fb555c5d (downloaded: 2026-10-25 12:22:14.635263+00:00)
+INFO:arc_agi.base:Successfully loaded game class Cd82 from environment_files\cd82\fb555c5d\cd82.py
+INFO:arc_agi.base:Created new scorecard: d67a226b-7879-42c3-8505-f963b40ae837
+INFO:arc_agi.base:Found latest version of cn04: cn04-2fe56bfb (downloaded: 2026-10-30 06:02:55.808980+00:00)
+INFO:arc_agi.base:Successfully loaded game class Cn04 from environment_files\cn04\2fe56bfb\cn04.py
+INFO:arc_agi.base:Created new scorecard: fa120e89-8bcc-49c4-a4e6-313a13787f3c
+INFO:arc_agi.base:Found latest version of dc22: dc22-fdcac232 (downloaded: 2026-10-30 06:02:54.044122+00:00)
+INFO:arc_agi.base:Successfully loaded game class Dc22 from environment_files\dc22\fdcac232\dc22.py

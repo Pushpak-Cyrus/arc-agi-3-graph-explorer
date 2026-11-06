@@ -1,0 +1,15 @@
+INFO:arc_agi.base:Created new scorecard: 75ed8ed3-39df-45e3-b71f-91b6ab80a8cb
+INFO:arc_agi.base:Found latest version of tn36: tn36-ef4dde99 (downloaded: 2026-10-25 12:27:09.339669+00:00)
+INFO:arc_agi.base:Successfully loaded game class Tn36 from environment_files\tn36\ef4dde99\tn36.py
+INFO:arc_agi.base:Created new scorecard: 2cf9036c-ab07-498a-bed5-31524f5ec8d7
+INFO:arc_agi.base:Found latest version of tr87: tr87-cd924810 (downloaded: 2026-10-25 12:27:24.939334+00:00)
+INFO:arc_agi.base:Successfully loaded game class Tr87 from environment_files\tr87\cd924810\tr87.py
+INFO:arc_agi.base:Created new scorecard: c3768d89-1d0e-4a14-9aae-24f89e03a086
+INFO:arc_agi.base:Found latest version of tu93: tu93-0768757b (downloaded: 2026-10-25 12:28:01.134247+00:00)
+INFO:arc_agi.base:Successfully loaded game class Tu93 from environment_files\tu93\0768757b\tu93.py
+INFO:arc_agi.base:Created new scorecard: 53aac8e3-d98c-439f-954b-db2509a0d0b9
+INFO:arc_agi.base:Found latest version of vc33: vc33-5430563c (downloaded: 2026-10-25 12:28:28.497870+00:00)
+INFO:arc_agi.base:Successfully loaded game class Vc33 from environment_files\vc33\5430563c\vc33.py
+INFO:arc_agi.base:Created new scorecard: 2f605c54-cb51-4c7d-880d-d1278c8dd373
+INFO:arc_agi.base:Found latest version of wa30: wa30-ee6fef47 (downloaded: 2026-10-25 12:28:39.605238+00:00)
+INFO:arc_agi.base:Successfully loaded game class Wa30 from environment_files\wa30\ee6fef47\wa30.py
