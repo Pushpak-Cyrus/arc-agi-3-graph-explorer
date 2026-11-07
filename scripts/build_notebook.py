@@ -40,6 +40,7 @@ _ACCELERATORS = {
 
 ROOT = Path(__file__).resolve().parents[1]
 AGENT_SRC = ROOT / "agent" / "my_agent.py"
+CYRUS_SRC = ROOT / "Cyrus"
 NOTEBOOK_PATH = ROOT / "notebooks" / "submission.ipynb"
 METADATA_PATH = ROOT / "notebooks" / "kernel-metadata.json"
 
@@ -58,10 +59,41 @@ def markdown_cell(source: str) -> dict:
     return {"cell_type": "markdown", "metadata": {}, "source": source}
 
 
+def cyrus_module_sources() -> list[Path]:
+    """Return importable runtime modules that must accompany MyAgent."""
+    return sorted(
+        path
+        for path in CYRUS_SRC.glob("*.py")
+        if path.stem.isidentifier() and not path.stem.startswith("test_")
+    )
+
+
+def cyrus_package_sources() -> list[Path]:
+    """Return importable modules in direct CYRUS packages (for example system2/)."""
+    return sorted(
+        path
+        for package_init in CYRUS_SRC.glob("*/__init__.py")
+        for path in package_init.parent.glob("*.py")
+        if path.stem.isidentifier() and not path.stem.startswith("test_")
+    )
+
+
 def build() -> dict:
     if not AGENT_SRC.exists():
         raise SystemExit(f"Could not find {AGENT_SRC}")
-    agent_body = AGENT_SRC.read_text()
+    module_paths = cyrus_module_sources()
+    if not module_paths:
+        raise SystemExit(f"No importable CYRUS modules found in {CYRUS_SRC}")
+    package_paths = cyrus_package_sources()
+
+    # Locally, agent/my_agent.py adds ../Cyrus to sys.path. Kaggle receives
+    # one generated notebook, so write the runtime modules into /tmp/cyrus
+    # and put that directory on the path before MyAgent is imported.
+    agent_body = (
+        "import sys\n"
+        "sys.path.insert(0, '/tmp/cyrus')\n\n"
+        + AGENT_SRC.read_text(encoding="utf-8")
+    )
 
     install_cell = code_cell(
         "!pip install --no-index --find-links \\\n"
@@ -76,6 +108,28 @@ def build() -> dict:
     write_agent_cell = code_cell(
         "%%writefile /tmp/my_agent.py\n" + agent_body
     )
+
+    prepare_cyrus_dir_cell = code_cell(
+        "from pathlib import Path\n"
+        "Path('/tmp/cyrus').mkdir(parents=True, exist_ok=True)\n"
+        "Path('/tmp/cyrus/system2').mkdir(parents=True, exist_ok=True)\n"
+    )
+    cyrus_module_cells = [
+        code_cell(
+            f"%%writefile /tmp/cyrus/{path.name}\n"
+            + path.read_text(encoding="utf-8").rstrip()
+            + "\n"
+        )
+        for path in module_paths
+    ]
+    cyrus_package_cells = [
+        code_cell(
+            f"%%writefile /tmp/cyrus/{path.relative_to(CYRUS_SRC).as_posix()}\n"
+            + path.read_text(encoding="utf-8").rstrip()
+            + "\n"
+        )
+        for path in package_paths
+    ]
 
     run_cell_source = dedent(
         """\
@@ -184,11 +238,14 @@ def build() -> dict:
         "cells": [
             markdown_cell(
                 "# ARC Prize 2026 — ARC-AGI-3 Submission\n\n"
-                "Built from `agent/my_agent.py` via `scripts/build_notebook.py`. "
-                "Do not edit cells directly — edit the source file and re-run "
-                "`make submit`."
+                "Built from `agent/my_agent.py` and the importable runtime "
+                "modules in `Cyrus/` via `scripts/build_notebook.py`. Do not "
+                "edit cells directly — edit the source files and rebuild."
             ),
             install_cell,
+            prepare_cyrus_dir_cell,
+            *cyrus_module_cells,
+            *cyrus_package_cells,
             write_agent_cell,
             run_cell,
             dummy_submission_cell,

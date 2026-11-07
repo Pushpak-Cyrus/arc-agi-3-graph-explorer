@@ -4,6 +4,8 @@ import sys
 import unittest
 from collections import Counter
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 import numpy as np
 
@@ -11,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "vendor" / "ARC-AGI-3-Agents"))
 sys.path.insert(0, str(ROOT / "Cyrus"))
 
+from agents.agent import GameAction
 from cyrus_agent import CyrusAgent
 from graph_memory import GraphMemory
 
@@ -152,6 +155,159 @@ class ActionProbePolicyTests(unittest.TestCase):
         self.assertFalse(agent._replaying_to_frontier("child"))
         self.assertEqual(agent.frontier_attempts, [])
         self.assertEqual(agent.zero_length_frontier_attempts, 0)
+
+    def test_exhausted_root_after_reset_does_not_create_zero_length_attempt(self):
+        agent = _agent_for_policy()
+        agent.frontier_mode_enabled = True
+        agent.frontier_depth_schedule = (6, 12, 24, 50)
+        agent.frontier_depth_index = 0
+        agent.frontier_depth_limit = 6
+        agent.frontier_attempt_cap = 6
+        agent.frontier_attempt_actions = 0
+        agent.frontier_attempts = []
+        agent.zero_length_frontier_attempts = 0
+        agent._attempt_start_hash = None
+        agent.frontier_root_hash = "root"
+        agent.frontier_replay_target = None
+        agent.frontier_search_exhausted = False
+        agent.last_action_signature = (0, None, None)
+        agent.actions_since_reset = 0
+        agent.actions_since_level_start = 0
+        agent._just_reset_after_game_over = False
+        agent.last_levels_completed = 0
+        agent.last_score = None
+        agent.first_level_advance_action = None
+        agent.DEBUG_FRAME_DIFF = False
+        agent.action_counter = 0
+        agent.relational_planner_enabled = False
+        agent.system2_takeover_enabled = False
+        agent._post_reset_action_pending = False
+        agent.movement_probe_trials = Counter()
+        agent.budget = SimpleNamespace(record_step=Mock())
+        agent.frame_processor = SimpleNamespace(
+            process=lambda _frame: {"hash": "root"}
+        )
+        agent.goal_tracker = SimpleNamespace(summarize_state=lambda _state: {})
+        agent.experiment_log = SimpleNamespace(begin=Mock())
+        agent.system2 = SimpleNamespace(watch=Mock())
+        agent._record_observation = lambda *_args, **_kwargs: (None, False)
+        agent._get_action_signatures = lambda *_args: [
+            ((1, None, None), 0)
+        ]
+        agent._select_action = lambda *_args: (1, None, None)
+        agent._record_probe_attempt = Mock()
+
+        root = agent.graph.add_state("root")
+        root.add_action((1, None, None), 0)
+        agent.graph.record_transition("root", (1, None, None), "root")
+        frame = SimpleNamespace(
+            state=SimpleNamespace(name="NOT_FINISHED"),
+            levels_completed=0,
+            frame=np.zeros((1, 1), dtype=np.int16),
+            available_actions=[1],
+        )
+
+        action = agent.choose_action([], frame)
+
+        self.assertIsNot(action, GameAction.RESET)
+        self.assertTrue(agent.frontier_search_exhausted)
+        self.assertEqual(agent.zero_length_frontier_attempts, 0)
+        self.assertEqual(agent.frontier_attempts, [])
+
+    def test_search_exhaustion_does_not_suppress_required_game_over_reset(self):
+        agent = _agent_for_policy()
+        agent.frontier_search_exhausted = True
+        agent.budget = SimpleNamespace(should_stop_run=Mock(return_value=False))
+        agent.action_counter = 0
+        agent.MAX_ACTIONS = 100
+        agent._post_reset_action_pending = False
+        agent.consecutive_reset_stalls = 0
+        agent.experiment_log = SimpleNamespace(pending=None)
+        frame = SimpleNamespace(
+            state=SimpleNamespace(name="GAME_OVER"),
+            levels_completed=0,
+        )
+
+        self.assertFalse(agent.is_done([], frame))
+
+    def test_unreachable_replay_target_stays_pending_and_blocks_reset(self):
+        agent = _agent_for_policy()
+        agent.search_order_enabled = True
+        agent.frontier_replay_target = "unreachable"
+        agent.frontier_replay_misses = 0
+        agent.action_noop_states = {}
+        agent.noop_deprioritize_after = 3
+        agent.learned_ranking_enabled = False
+        agent.learned_ranking_decisions = 0
+        agent.learned_ranking_choice_changes = 0
+        agent.last_action_signature = (1, None, None)
+        agent.frontier_reset_due = True
+        node = agent.graph.add_state("root")
+        node.add_action((1, None, None), 0)
+
+        action = agent._select_action(
+            "root", node, _state(), SimpleNamespace(available_actions=[1])
+        )
+
+        self.assertEqual(action, (1, None, None))
+        self.assertEqual(agent.frontier_replay_target, "unreachable")
+        self.assertEqual(agent.frontier_replay_misses, 1)
+        self.assertTrue(agent._replaying_to_frontier("root"))
+
+    def test_unreachable_frontier_is_replaced_after_three_missed_replays(self):
+        agent = _agent_for_policy()
+        agent.search_order_enabled = True
+        agent.frontier_mode_enabled = True
+        agent.frontier_depth_schedule = (6, 12, 24, 50)
+        agent.frontier_depth_index = 0
+        agent.frontier_depth_limit = 6
+        agent.frontier_attempt_cap = 6
+        agent.frontier_root_hash = "root"
+        agent.frontier_replay_target = "unreachable"
+        agent.frontier_replay_misses = 0
+        agent.action_noop_states = {}
+        agent.noop_deprioritize_after = 3
+        agent.learned_ranking_enabled = False
+        agent.learned_ranking_decisions = 0
+        agent.learned_ranking_choice_changes = 0
+        agent.last_action_signature = (1, None, None)
+
+        root = agent.graph.add_state("root")
+        alternate = agent.graph.add_state("alternate")
+        root.add_action((1, None, None), 0)
+        agent.graph.record_transition("root", (1, None, None), "alternate")
+        alternate.add_action((2, None, None), 0)
+        state = _state()
+        state["hash"] = "root"
+
+        for _ in range(3):
+            agent._select_action(
+                "root", root, state, SimpleNamespace(available_actions=[1, 2])
+            )
+
+        self.assertEqual(agent.frontier_replay_target, "alternate")
+        self.assertEqual(agent.frontier_replay_misses, 0)
+
+    def test_unreachable_frontier_uses_previous_clear_behavior_when_flag_off(self):
+        agent = _agent_for_policy()
+        agent.search_order_enabled = False
+        agent.frontier_replay_target = "unreachable"
+        agent.frontier_replay_misses = 0
+        agent.action_noop_states = {}
+        agent.noop_deprioritize_after = 3
+        agent.learned_ranking_enabled = False
+        agent.learned_ranking_decisions = 0
+        agent.learned_ranking_choice_changes = 0
+        agent.last_action_signature = (1, None, None)
+        node = agent.graph.add_state("root")
+        node.add_action((1, None, None), 0)
+
+        agent._select_action(
+            "root", node, _state(), SimpleNamespace(available_actions=[1])
+        )
+
+        self.assertIsNone(agent.frontier_replay_target)
+        self.assertEqual(agent.frontier_replay_misses, 0)
 
 
 if __name__ == "__main__":

@@ -156,6 +156,7 @@ class CyrusAgent(Agent):
         )
         self.frontier_root_hash: Optional[str] = None
         self.frontier_replay_target: Optional[str] = None
+        self.frontier_replay_misses = 0
         self.frontier_mode_enabled = os.getenv(
             "CYRUS_FRONTIER_MODE", "0"
         ).strip().lower() in {"1", "true", "yes", "on"}
@@ -208,7 +209,7 @@ class CyrusAgent(Agent):
         state_name = latest_frame.state.name
         game_over = state_name == "GAME_OVER"
         won = state_name == "WIN"
-        if getattr(self, "frontier_search_exhausted", False):
+        if getattr(self, "frontier_search_exhausted", False) and not game_over:
             return True
         if self._post_reset_action_pending:
             self._post_reset_action_pending = False
@@ -464,17 +465,20 @@ class CyrusAgent(Agent):
             else:
                 self.click_class_trials[click_class] += 1
 
-    def _find_frontier_with_iterative_deepening(self, root_hash):
+    def _find_frontier_with_iterative_deepening(
+            self, root_hash, excluded_hashes=None):
         """Find the shallowest frontier below D, widening D only on exhaustion."""
         while self.frontier_depth_index < len(self.frontier_depth_schedule):
             depth_limit = self.frontier_depth_schedule[self.frontier_depth_index]
             frontier = self.graph.get_shallowest_frontier(
-                root_hash, max_depth=depth_limit
+                root_hash, max_depth=depth_limit,
+                excluded_hashes=excluded_hashes,
             )
             if frontier is not None:
                 self.frontier_depth_limit = depth_limit
                 self.frontier_attempt_cap = depth_limit
                 self.frontier_replay_target = frontier[0]
+                self.frontier_replay_misses = 0
                 return frontier
             if self.frontier_depth_index + 1 < len(self.frontier_depth_schedule):
                 self.frontier_depth_index += 1
@@ -489,6 +493,7 @@ class CyrusAgent(Agent):
             else:
                 break
         self.frontier_replay_target = None
+        self.frontier_replay_misses = 0
         return None
 
     def _close_frontier_attempt(self, end_hash, reason):
@@ -605,6 +610,7 @@ class CyrusAgent(Agent):
             # as history and is not treated as reachable in this level.
             self.frontier_root_hash = state_hash
             self.frontier_replay_target = None
+            self.frontier_replay_misses = 0
             self.frontier_depth_index = 0
             self.frontier_depth_limit = self.frontier_depth_schedule[0]
             self.frontier_attempt_cap = self.frontier_depth_limit
@@ -688,17 +694,11 @@ class CyrusAgent(Agent):
                 current_untested = node.get_untested_actions()
                 if not current_untested:
                     # The graph has no frontier at any permitted depth and no
-                    # newly widened candidate at this state. Never repeat a
-                    # tested state-action pair; allow the normal completion
-                    # / action budget to terminate this run instead.
+                    # newly widened candidate at this state. Stop the search
+                    # rather than resetting from an exhausted root: at action
+                    # count zero, RESET would restart the entire game.
                     self.frontier_search_exhausted = True
                     self.last_selection_reason = "system1_search_exhausted"
-                    self.last_state_hash = state_hash
-                    self.last_action_signature = (GameAction.RESET.value, None, None)
-                    self.previous_state = state
-                    self.actions_since_reset = 0
-                    self.actions_since_level_start = 0
-                    return GameAction.RESET
 
         # ------------------------------------------------------------------
         # 6. SELECT NEXT EXPERIMENT
@@ -1291,6 +1291,7 @@ class CyrusAgent(Agent):
         if self.frontier_replay_target is not None:
             if state_hash == self.frontier_replay_target:
                 self.frontier_replay_target = None
+                self.frontier_replay_misses = 0
             else:
                 replay_path = self.graph.get_shortest_path(
                     state_hash, self.frontier_replay_target
@@ -1300,17 +1301,28 @@ class CyrusAgent(Agent):
                         replay_path[0], replay_path[1]
                     )
                     if replay_action is not None:
+                        self.frontier_replay_misses = 0
                         self._last_selection_was_replay = True
                         print(
                             "[CYRUS] Replaying graph path to frontier: "
                             f"{replay_action}"
                         )
                         return replay_action
-                # A reset may yield a visually different root (for example,
-                # a timer or animation is part of the observed frame). In
-                # that case the stored path is not reachable; abandon this
-                # replay target and continue with observed local evidence.
-                self.frontier_replay_target = None
+                if getattr(self, "search_order_enabled", False):
+                    self.frontier_replay_misses += 1
+                    if self.frontier_replay_misses >= 3:
+                        abandoned_target = self.frontier_replay_target
+                        self.frontier_replay_target = None
+                        self.frontier_replay_misses = 0
+                        self._find_frontier_with_iterative_deepening(
+                            self.frontier_root_hash or state_hash,
+                            excluded_hashes={abandoned_target},
+                        )
+                else:
+                    # Preserve the pre-search-order behavior when the optional
+                    # policy is disabled.
+                    self.frontier_replay_target = None
+                    self.frontier_replay_misses = 0
 
         globally_valuable = [
             edge

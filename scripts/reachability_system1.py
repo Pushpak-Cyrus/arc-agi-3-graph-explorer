@@ -85,6 +85,50 @@ def reconstructed_score(baselines, levels_completed, trace, total_actions, game_
     return float(calculator.to_score().score)
 
 
+def reset_trace_metrics(trace):
+    """Derive reset categories from captured actions and resulting frames."""
+    game_over_resets = sum(
+        row.get("action_id") == 0
+        and row.get("selection_reason") == "game_over_reset"
+        for row in trace
+    )
+    frontier_resets = sum(
+        row.get("action_id") == 0
+        and row.get("selection_reason") == "system1_frontier_reset"
+        for row in trace
+    )
+    zero_length_attempts = 0
+    full_game_resets = 0
+    previous_action = None
+    previous_state = None
+    previous_level = 0
+    actions_since_level_start = 0
+    for row in trace:
+        action_id = int(row.get("action_id", -1))
+        levels_completed = int(row.get("levels_completed") or 0)
+        if action_id == 0:
+            if (previous_action is not None
+                    and previous_state != "GAME_OVER"
+                    and (previous_action == 0 or actions_since_level_start == 0)):
+                zero_length_attempts += 1
+            if previous_level > 0 and levels_completed == 0:
+                full_game_resets += 1
+            actions_since_level_start = 0
+        elif levels_completed > previous_level:
+            actions_since_level_start = 0
+        else:
+            actions_since_level_start += 1
+        previous_action = action_id
+        previous_state = row.get("state")
+        previous_level = levels_completed
+    return {
+        "game_over_resets": int(game_over_resets),
+        "frontier_resets": int(frontier_resets),
+        "zero_length_attempt_count": int(zero_length_attempts),
+        "full_game_resets": int(full_game_resets),
+    }
+
+
 def run_one(arcade, infos, agent_class, game_id, budget):
     run_key = f"{game_id}_system1_seed{SEED}_cap{budget}"
     # Use absolute paths for trace capture; ROOT is resolved and pathlib will
@@ -195,6 +239,7 @@ def run_one(arcade, infos, agent_class, game_id, budget):
         raise RuntimeError(f"No scorecard environment entry for {game_id}")
     score = float(official_environment.score)
     reset_count = sum(1 for row in trace if row.get("action_id") == 0)
+    reset_metrics = reset_trace_metrics(trace)
     peak_levels_completed = max(
         (int(row.get("levels_completed") or 0) for row in trace), default=0
     )
@@ -208,16 +253,23 @@ def run_one(arcade, infos, agent_class, game_id, budget):
         for row in trace
     )
     attempts_by_reset = []
+    replay_lengths_by_reset = []
     segment = []
+    segment_replay_actions = 0
     for row in trace:
         if row.get("action_id") == 0:
             if segment:
                 attempts_by_reset.append(len(segment))
+                replay_lengths_by_reset.append(segment_replay_actions)
             segment = []
+            segment_replay_actions = 0
         else:
             segment.append(row)
+            if row.get("selection_reason") == "system1_frontier_replay":
+                segment_replay_actions += 1
     if segment:
         attempts_by_reset.append(len(segment))
+        replay_lengths_by_reset.append(segment_replay_actions)
     result = {
         "game_id": game_id,
         "split": "dev" if game_id in {"ar25", "cn04", "dc22", "ls20", "re86"}
@@ -236,7 +288,12 @@ def run_one(arcade, infos, agent_class, game_id, budget):
         "scorecard_score": score,
         "actions_including_resets": int(agent.action_counter),
         "resets": reset_count,
-        "game_over_resets": int(agent.game_over_resets),
+        **reset_metrics,
+        "average_replay_length_per_attempt": (
+            sum(replay_lengths_by_reset) / len(replay_lengths_by_reset)
+            if replay_lengths_by_reset else 0.0
+        ),
+        "replay_attempt_intervals": len(replay_lengths_by_reset),
         "final_state": final.state.name,
         "end_reason": end_reason,
         "exception": exception,
@@ -266,7 +323,10 @@ def run_one(arcade, infos, agent_class, game_id, budget):
         "replay_fraction": replay_actions / max(1, len(trace)),
         "attempt_lengths": attempts_by_reset,
         "attempt_count": len(agent.frontier_attempts),
-        "zero_length_attempt_count": int(agent.zero_length_frontier_attempts),
+        "zero_length_attempt_count": reset_metrics["zero_length_attempt_count"],
+        "internal_zero_length_frontier_attempt_count": int(
+            agent.zero_length_frontier_attempts
+        ),
         "no_op_action_signatures": len(agent.action_noop_states),
         "frontier_root_hash": agent.frontier_root_hash,
     }
@@ -343,7 +403,11 @@ def main():
                 f"levels={row['levels_completed']} "
                 f"first={row['first_level_action']} "
                 f"actions={row['actions_including_resets']} "
-                f"resets={row['resets']} end={row['end_reason']}",
+                f"resets={row['resets']} "
+                f"full_game_resets={row.get('full_game_resets', 'NA')} "
+                f"zero_length_attempts="
+                f"{row.get('zero_length_attempt_count', 'NA')} "
+                f"end={row['end_reason']}",
                 flush=True,
             )
 

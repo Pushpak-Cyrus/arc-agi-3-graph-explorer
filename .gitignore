@@ -3,8 +3,11 @@
 
 # Python
 .venv/
+.env
 __pycache__/
 *.pyc
+Cyrus/system2/interaction_memory.json
+Cyrus/system2/goal_memory.json
 
 # Vendored framework + downloaded game source + agent recordings
 vendor/
@@ -15,6 +18,17 @@ logs.log
 # Generated artefacts
 notebooks/submission.ipynb
 reference/
+research/**/action_trace.jsonl
+research/**/fresh_memory/
+
+# Local research logs and run aggregates; may contain credentials or large traces
+/*.txt
+/all_games_*.jsonl
+research/system2/*.txt
+research/system2/**/predicates.jsonl
+research/system2/all_games_*.jsonl
+research/**/runs.jsonl
+research/**/summary.json
 
 # OS / editors
 .DS_Store

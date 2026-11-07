@@ -1,249 +1,161 @@
-# ARC Prize 2026 — Local Dev Starter
+# CYRUS: a graph-based ARC-AGI-3 explorer
 
-**Go from zero to your first Kaggle submission in about 10 minutes, without
-ever opening the Kaggle notebook editor.**
+CYRUS is a research prototype for ARC-AGI-3. Its System 1 explorer is based on
+the graph-exploration approach described in
+[arXiv:2512.24156](https://arxiv.org/abs/2512.24156). An optional System 2 layer
+adds hypothesis-driven action selection when exploration stalls. These local
+results are evidence about the tested cached layouts only; they do not
+demonstrate generalization.
 
-This is a starter kit for the [ARC Prize 2026 — ARC-AGI-3](https://www.kaggle.com/competitions/arc-prize-2026-arc-agi-3)
-competition. You'll edit one Python file on your laptop, see it actually play
-the real game environments locally, and push it to Kaggle as a submission with
-a single command.
+## Architecture
 
-No Docker. No `submission.json` to hand-write. No copy-pasting between your
-editor and a notebook.
+- `agent/my_agent.py` exposes `CyrusAgent` to the ARC agent framework.
+- `Cyrus/frame_processor.py` converts observations into state representations
+  and progress signals.
+- `Cyrus/graph_memory.py` records observed states, action signatures, and
+  transitions. Coordinate-target actions are stored as distinct experiments.
+- System 1 prioritizes untested actions and navigates to observed graph
+  frontiers, replaying known action paths where available.
+- `Cyrus/system2/` contains the optional hypothesis, interaction, and
+  goal-related components. System 2 takeover, learned ranking, the relational
+  planner, and the local LLM were disabled for the paired results below.
 
----
+`tools/oracle_dev_search.py` is an offline diagnostic tool. The agent does not
+import or call it, and it is not part of the evaluation policy.
 
-## What you need before you start
+## Run locally
 
-- **Python 3.12** (the competition's `arc-agi` package requires it)
-  - macOS: `brew install python@3.12`
-  - Ubuntu: `sudo apt install python3.12 python3.12-venv`
-  - Windows: install from [python.org](https://www.python.org/downloads/)
-- **git** (to clone the official agent framework)
-- **A Kaggle account** with the competition rules accepted
-  ([accept here](https://www.kaggle.com/competitions/arc-prize-2026-arc-agi-3/rules))
+Use Python 3.12 and the repository setup to install the ARC-AGI-3 framework and
+dependencies:
 
-That's it. No GPU required for the starter agent.
-
----
-
-## Quick start
-
-```bash
-# 1.  Clone this repo and step in
-git clone https://github.com/arcprize/ARC-AGI-3-Kaggle-Starter.git
-cd ARC-AGI-3-Kaggle-Starter
-
-# 2.  Drop your Kaggle API token (kaggle.com → Settings → Create New Token)
-#     into the project-local .kaggle/ folder (NOT your home directory)
-mkdir -p .kaggle && echo "KGAT_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" > .kaggle/access_token
-chmod 600 .kaggle/access_token
-
-# 3.  One-time setup: venv, dependencies, framework
+```powershell
 make setup
-
-# 4.  Open agent/my_agent.py to see the random-action starter, then edit
-#     it to make a better submission. This is the only file you change.
-
-# 5.  Run it locally against every game in the competition (takes seconds)
-make play-local
-
-# 6.  Push it to Kaggle as a submission notebook
-make submit
-
-# 7.  Watch the run
-make status
-
-# 8.  When status shows "complete", open the notebook on kaggle.com,
-#     find your kernel, click "Submit to Competition" in the top
-#     right, and pick `submission.parquet` from the Output File
-#     dropdown. That's one of your 5 daily submissions.
+make play-local GAME=ls20
 ```
 
-That's the entire loop. Steps 4–7 are what you'll repeat as you iterate;
-step 8 is the deliberate moment when you spend a daily submission.
+The focused policy tests and the 25-game System 1 evaluation can be run with:
 
----
+```powershell
+.\.venv\Scripts\python.exe -m unittest Cyrus.test_action_probe_policy
 
-## The one file you edit: `agent/my_agent.py`
+$env:CYRUS_REACHABILITY_OUT = "research\system2\local_runs\flag_off"
+.\.venv\Scripts\python.exe scripts\reachability_system1.py --games ar25,bp35,cd82,cn04,dc22,ft09,g50t,ka59,lf52,lp85,ls20,m0r0,r11l,re86,s5i5,sb26,sc25,sk48,sp80,su15,tn36,tr87,tu93,vc33,wa30 --budgets 5000
 
-This is the only file you normally touch. It defines a class called `MyAgent`
-with two methods:
-
-```python
-class MyAgent(Agent):
-    def is_done(self, frames, latest_frame) -> bool:
-        """Return True when your agent wants to stop playing."""
-        ...
-
-    def choose_action(self, frames, latest_frame) -> GameAction:
-        """Look at the game state and return the next action."""
-        ...
+$env:CYRUS_REACHABILITY_OUT = "research\system2\local_runs\flag_on"
+.\.venv\Scripts\python.exe scripts\reachability_system1.py --games ar25,bp35,cd82,cn04,dc22,ft09,g50t,ka59,lf52,lp85,ls20,m0r0,r11l,re86,s5i5,sb26,sc25,sk48,sp80,su15,tn36,tr87,tu93,vc33,wa30 --budgets 5000 --search-order
 ```
 
-The starter version picks random actions — a baseline that proves your whole
-pipeline works end-to-end. Replace the body of `choose_action` with your
-strategy. Everything else (Kaggle plumbing, submission file format, game
-orchestration) is handled for you.
+Each run uses seed 0, fresh memory for each game, and a 5,000-action budget
+including RESET actions. `--search-order` enables the optional search order;
+when `CYRUS_SEARCH_ORDER` is unset, it is off. Results are written to a
+timestamped directory under `CYRUS_REACHABILITY_OUT`.
 
----
+## Paired 25-game results
 
-## What happens when you run `make submit`
+The two final runs used the same local source snapshot and HEAD
+`c5fe794c21a032e7f22a3982e36c621e75c97e3b`, with the flag-off run completed
+first. The working tree was not clean, so the commit hash alone does not
+identify the complete source snapshot; the run directories contain the
+artifacts and the build ledger records source hashes and this caveat.
 
-The competition is a *code* competition: you submit a notebook, Kaggle runs it
-twice.
+The table reports final/peak confirmed levels, the first action at which a
+level advance was confirmed, and the local environment scorecard percentage.
+`-` means no confirmed level advance.
 
-```diagram
-   make submit
-       │
-       ▼
-   ┌─────────────────────────────────────┐
-   │  Kaggle Phase A: Save & Run All     │
-   │  ─ Runs your notebook in their      │
-   │    real environment                 │
-   │  ─ Validates that your code         │
-   │    executes without errors          │
-   │  ─ make status shows "complete"     │
-   └─────────────────┬───────────────────┘
-                     │
-                     │  You click "Submit to Competition"
-                     │  on the kernel page
-                     ▼
-   ┌─────────────────────────────────────┐
-   │  Kaggle Phase B: Competition Rerun  │
-   │  ─ Your agent actually plays the    │
-   │    hidden game set                  │
-   │  ─ Your leaderboard score appears   │
-   └─────────────────────────────────────┘
-```
+| Game | Off final/peak | Off first level action | Off score % | On final/peak | On first level action | On score % |
+|---|---:|---:|---:|---:|---:|---:|
+| ar25 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| bp35 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| cd82 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| cn04 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| dc22 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| ft09 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| g50t | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| ka59 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| lf52 | 1/1 | 96 | 0.202020 | 1/1 | 159 | 0.073645 |
+| lp85 | 1/1 | 672 | 0.001778 | 1/1 | 679 | 0.001741 |
+| ls20 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| m0r0 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| r11l | 1/1 | 48 | 1.000331 | 1/1 | 845 | 0.003228 |
+| re86 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| s5i5 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| sb26 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| sc25 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| sk48 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| sp80 | 0/0 | - | 0.000000 | 1/1 | 4187 | 0.000413 |
+| su15 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| tn36 | 1/1 | 140 | 0.186589 | 0/0 | - | 0.000000 |
+| tr87 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| tu93 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+| vc33 | 1/1 | 2099 | 0.000040 | 1/1 | 961 | 0.000189 |
+| wa30 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
 
-`make submit` builds and uploads the notebook (Phase A). After
-`make status` reports `complete`, open the kernel on kaggle.com and click
-**"Submit to Competition"** to enter Phase B and get a leaderboard score.
+Each setting completed five levels across the suite. The mean scorecard was
+0.0556303% off and 0.00316867% on. Search order gained `sp80` at action 4,187
+and lost `tn36`; no game had fewer levels than its matching setting in the
+previous paired build. `ft09` and `sc25` exhausted the search before 5,000
+actions, without raising exceptions. The development game `ls20` completed no
+levels in either setting.
 
-> **You only get 5 official submissions per day**, so it pays to be
-> confident before you submit: get `make play-local` passing, then submit.
+The predeclared acceptance checks all failed: `cd82` did not reach Level 1,
+`sp80` reached it only with search order at action 4,187 (threshold 714), and
+`tu93` did not reach Level 1 (threshold 1,751).
 
-> **Heads up:** Before your first `make submit`, open
-> [`notebooks/kernel-metadata.json`](notebooks/kernel-metadata.json) and
-> replace `REPLACE_WITH_YOUR_USERNAME` with your Kaggle handle. The Makefile
-> will refuse to push until you do.
+### Score convention
 
-### Choosing an accelerator
+The score is the local ARC environment scorecard expressed as a percentage,
+not the percentage of games solved. For each level, the raw score is
+`min((baseline_actions / actions_taken)^2 * 100, 115)`. It is weighted by the
+one-based level number, averaged over the game’s total level weights, and
+capped by the completed-level weight fraction. RESET actions count toward
+actions taken.
 
-The notebook is generated with a **T4 GPU** by default (matches Kaggle's
-sample submission). To change it, open
-[`scripts/build_notebook.py`](scripts/build_notebook.py) and edit **one
-line** near the top:
+The often-quoted `4.7619%` and the `66`-action entry are from different r11l
+runs. The October 23 run’s score was `4.761904...%`; the October 22 comparison
+entry at 66 actions reported `0.190476%`. The October 23 trace advanced after
+four actions and then continued to 64 total actions. In the six-level game,
+`4.7619%` is a Level 1 raw score of 100 weighted by `1 / (1+2+3+4+5+6)`.
+The 66-action entry must not be paired with that score.
 
-```python
-ACCELERATOR = "t4"     # change "t4" to one of: cpu, t4, p100, rtx6000
-```
+The paired run’s r11l flag-off result is a separate trajectory: Level 1 was
+confirmed at action 48. With its 22-action baseline, the raw level score is
+about 21.0069, and the Level 1 weight gives `1.000331%`. The flag-on run
+confirmed Level 1 at action 845 and scored `0.003228%`.
 
-Then re-run `make submit`. That's it — both the notebook metadata and
-[`notebooks/kernel-metadata.json`](notebooks/kernel-metadata.json) get
-updated automatically.
+## Reset/replay fix and known defect
 
-| Value | Hardware | When to use |
-|---|---|---|
-| `"cpu"` | No GPU | The random starter, or any non-ML agent |
-| `"t4"` | Nvidia T4 ×2 | **Default.** Small models, fast iteration |
-| `"p100"` | Nvidia P100 | Single big-memory GPU |
-| `"rtx6000"` | Nvidia RTX 6000 (`g4-standard-48`) | Heavy ML; **ARC-AGI-3 exclusive**, burns GPU quota faster |
+An earlier frontier/reset defect allowed an exhausted root to trigger empty
+attempts and unsafe repeated RESETs. The reset-safety changes prevent empty
+frontier attempts and avoid issuing a repeated RESET without intervening
+progress. With search order off, an unreachable frontier is cleared using the
+previous behavior; the reset-safety changes are the only intended behavior
+change in that setting.
 
-RTX 6000 is reserved for ARC-AGI-3 notebooks only — don't use it for early
-iteration. All accelerated Kaggle sessions have internet disabled, which is
-already the default in this kit.
+With search order enabled, a frontier remains pending when no observed replay
+path exists, so another opportunity to reach it can occur. If it has no replay
+path for three consecutive decisions, it is dropped and another frontier is
+selected. This path is opt-in; the environment variable is false when unset.
+The final paired runs recorded zero zero-length attempts and zero full-game
+resets in all 50 game-runs. A full-game reset is a RESET after which
+`levels_completed` drops to zero. These fixes address reset control, not the
+broader weakness in finding efficient solutions.
 
----
+## Limitations
 
-## All the commands
+- Each game was tested on one cached layout with one seed (seed 0).
+- There is no true held-out set: all 25 games were used during development.
+- `ft09` and `sc25` ended on search exhaustion before the nominal action
+  budget; this does not establish that the games are unsolvable.
+- These are local results, not online competition results, and provide no
+  evidence of generalization to unseen layouts.
 
-| Command | What it does |
-|---|---|
-| `make setup` | One-time install: Python venv, `arc-agi`, `kaggle` CLI, clones the framework |
-| `make play-local` | Runs your agent against every game in the dataset, locally |
-| `make play-local GAME=ls20` | Same, but only one game (faster while debugging) |
-| `make verify-local` | 30-second smoke test on two games |
-| `make list-games` | Print every game id available |
-| `make pull-sample` | Download the official sample agent for reference |
-| `make notebook` | Build the Kaggle notebook from your agent (no push) |
-| `make submit` | Build the notebook **and** push it to Kaggle |
-| `make status` | Check the status of your most recent Kaggle run |
-| `make clean` | Remove the venv, downloads, and generated notebook |
+## License
 
----
+There is no root-level project license. The vendored
+`vendor/ARC-AGI-3-Agents/LICENSE` is MIT; it permits use, modification, and
+redistribution subject to retaining the copyright and permission notice, and
+includes warranty and liability disclaimers. No new project license is
+asserted here.
 
-## Why this setup, instead of editing in the Kaggle notebook?
-
-Three reasons:
-
-1. **Iteration speed.** Editing in your normal IDE, then `make play-local`,
-   gives you a real-game-engine feedback loop in seconds. The Kaggle editor's
-   loop is *minutes* per change.
-2. **No environment surprises.** The local `arc-agi` PyPI package hosts the
-   same game engine the Kaggle gateway runs. If it works locally, it works on
-   Kaggle.
-3. **Your code stays in git.** Notebooks are awful for diffs and code review.
-   Here your real work lives in [`agent/my_agent.py`](agent/my_agent.py); the
-   notebook is just an auto-generated deployment artifact.
-
----
-
-## Project layout
-
-```
-.
-├── agent/
-│   └── my_agent.py             ★ The file you edit
-├── scripts/
-│   ├── play_local.py           Runs your agent against real games
-│   ├── build_notebook.py       Packages your agent into a Kaggle notebook
-│   └── slim_framework.py       Trims framework deps so install is light
-├── notebooks/
-│   ├── kernel-metadata.json    Edit once: your Kaggle username
-│   └── submission.ipynb        Auto-generated, never edit by hand
-├── vendor/                     Cloned framework (gitignored)
-├── .venv/                      Python 3.12 venv (gitignored)
-├── .kaggle/                    Your project-local Kaggle token (gitignored)
-└── Makefile
-```
-
----
-
-## Troubleshooting
-
-**`make setup` fails: `python3.12: command not found`**
-Install Python 3.12 — the `arc-agi` package requires it. macOS:
-`brew install python@3.12`.
-
-**`make submit` says "edit kernel-metadata.json"**
-You haven't replaced `REPLACE_WITH_YOUR_USERNAME` in
-[`notebooks/kernel-metadata.json`](notebooks/kernel-metadata.json) yet.
-
-**`make submit` says `401 Unauthorized`**
-Your Kaggle token is missing or invalid. Generate a fresh one from your
-[Kaggle Settings page](https://www.kaggle.com/settings) and overwrite
-`.kaggle/access_token`.
-
-**`make play-local` says "Could not create environment"**
-Your machine couldn't reach the ARC-AGI API to download the game source on
-first run. Check your internet, then try again — once downloaded, games are
-cached in `environment_files/` and you're fully offline.
-
-**My local score is 0.0**
-That's expected for the random starter agent. Your job is to make it
-non-zero. 🙂
-
----
-
-## Where to go next
-
-- Read the [ARC-AGI-3 docs](https://docs.arcprize.org/) to understand the
-  benchmark.
-- `make pull-sample` to study Kaggle's reference agent (the same one
-  currently sitting on the leaderboard).
-- The competition's [discussion forum](https://www.kaggle.com/competitions/arc-prize-2026-arc-agi-3/discussion)
-  for community Q&A.
-
-Good luck. Looking forward to seeing what you build.
+Detailed runs, previous-build comparisons, and implementation history are in
+[`research/system2/BUILDS.md`](research/system2/BUILDS.md).

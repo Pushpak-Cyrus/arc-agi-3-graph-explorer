@@ -390,7 +390,8 @@ class GraphMemory:
         return None
 
     def get_shallowest_frontier(
-            self, root_hash: str, max_depth: Optional[int] = None
+            self, root_hash: str, max_depth: Optional[int] = None,
+            excluded_hashes=None,
     ) -> Optional[Tuple[str, List[str]]]:
         """Return the shortest observed path from ``root_hash`` to an
         unexplored state, using BFS over recorded transitions.
@@ -401,13 +402,15 @@ class GraphMemory:
         """
         if root_hash not in self.nodes:
             return None
+        excluded_hashes = set(excluded_hashes or ())
         queue = deque([root_hash])
         parent = {root_hash: None}
         depth = {root_hash: 0}
         while queue:
             current = queue.popleft()
             node = self.nodes[current]
-            if (node.get_untested_actions()
+            if (current not in excluded_hashes
+                    and node.get_untested_actions()
                     and (max_depth is None or depth[current] < max_depth)):
                 path = []
                 cursor = current
