@@ -1,161 +1,143 @@
-# CYRUS: a graph-based ARC-AGI-3 explorer
+# ARC-AGI-3 Graph Explorer (CYRUS)
 
-CYRUS is a research prototype for ARC-AGI-3. Its System 1 explorer is based on
-the graph-exploration approach described in
-[arXiv:2512.24156](https://arxiv.org/abs/2512.24156). An optional System 2 layer
-adds hypothesis-driven action selection when exploration stalls. These local
-results are evidence about the tested cached layouts only; they do not
-demonstrate generalization.
+A research prototype for [ARC-AGI-3](https://arxiv.org/abs/2603.24621): an agent that learns to play unseen interactive grid games by building a graph of the states it has observed and searching it systematically, with no per-game or per-level strategies.
 
-## Architecture
+**Status: finished research prototype, with negative results.** The agent solves the first level in 5 of 25 local games, usually inefficiently. It does not generalise, and this repository is mainly an honest record of what was built, what the diagnostics showed, and what went wrong.
 
-- `agent/my_agent.py` exposes `CyrusAgent` to the ARC agent framework.
-- `Cyrus/frame_processor.py` converts observations into state representations
-  and progress signals.
-- `Cyrus/graph_memory.py` records observed states, action signatures, and
-  transitions. Coordinate-target actions are stored as distinct experiments.
-- System 1 prioritizes untested actions and navigates to observed graph
-  frontiers, replaying known action paths where available.
-- `Cyrus/system2/` contains the optional hypothesis, interaction, and
-  goal-related components. System 2 takeover, learned ranking, the relational
-  planner, and the local LLM were disabled for the paired results below.
+> These results come from 25 cached game layouts, one seed each, run locally. They are not online competition results and give no evidence of generalisation to unseen layouts.
 
-`tools/oracle_dev_search.py` is an offline diagnostic tool. The agent does not
-import or call it, and it is not part of the evaluation policy.
+## Contents
 
-## Run locally
+- [Results at a glance](#results-at-a-glance)
+- [What we learned](#what-we-learned)
+- [How it works](#how-it-works)
+- [Quick start](#quick-start)
+- [Reproducing the results](#reproducing-the-results)
+- [Repository layout](#repository-layout)
+- [Evaluation protocol and scoring](#evaluation-protocol-and-scoring)
+- [Limitations](#limitations)
+- [References](#references)
+- [License](#license)
 
-Use Python 3.12 and the repository setup to install the ARC-AGI-3 framework and
-dependencies:
+## Results at a glance
 
-```powershell
+Final paired runs: seed 0, fresh memory for every game, 5,000 actions per game (RESET actions count). Both runs used the same source snapshot (HEAD `c5fe794`, working tree not clean; source hashes are recorded in `research/system2/BUILDS.md`).
+
+| Setting | Levels solved (of 25 games) | Mean scorecard |
+|---|---:|---:|
+| Frontier search (default) | 5 | 0.0556% |
+| Frontier search + iterative deepening (`--search-order`) | 5 | 0.0032% |
+
+Games where a level was confirmed (first-level action index in brackets; `-` means none):
+
+| Game | Default | With `--search-order` |
+|---|---|---|
+| lf52 | 1 level (96) | 1 level (159) |
+| r11l | 1 level (48) | 1 level (845) |
+| tn36 | 1 level (140) | - |
+| lp85 | 1 level (672) | 1 level (679) |
+| vc33 | 1 level (2,099) | 1 level (961) |
+| sp80 | - | 1 level (4,187) |
+
+The other 19 games completed no level in either setting. Full per-game tables, including scores, are in [`research/system2/BUILDS.md`](research/system2/BUILDS.md).
+
+The scorecard rewards efficiency: each level's score is `(baseline_actions / actions_taken)²`. Levels found by wandering at hundreds or thousands of actions score close to zero, which is why five solved games produce a mean under 0.06%.
+
+Three acceptance checks were set in advance (first level in at most 862 actions for cd82, 714 for sp80, 1,751 for tu93). **All three failed.**
+
+## What we learned
+
+1. **Short solutions exist, and the agent doesn't find them efficiently.** A breadth-first oracle (using game-state cloning, which a real agent can't do) found first-level solutions of 5 actions (cd82), 4 (sp80), 18 (tu93) and 13 (ls20). An earlier random-walk build needed 1,429 to 3,503 actions to stumble on solutions in three of these games.
+2. **A control-flow bug silently broke 8 of 25 games.** After a RESET, an exhausted search could issue another RESET before replaying to a frontier. In ft09, lp85, ls20, re86, sc25, sk48, tr87 and tu93, nearly every RESET was a duplicate, so those runs measured the bug, not the method. Fixing it raised the count of solved games from 3 to 5.
+3. **The engine treats a RESET at action count 0 as a full-game restart.** In the installed `arcengine`, RESET only restores the current level when at least one action has been taken since the level began. Sending RESET right after another RESET, or as the first action after a level advance, returns the game to level 0 with score 0. This explains a level count that dropped from 1 to 0 in vc33. The behaviour depends on the engine's `ONLY_RESET_LEVELS` setting, and the official evaluation's setting is unverified.
+4. **The search-order change did not help.** Iterative deepening and simple-actions-first solved sp80 (late) but lost tn36 and made r11l 17 times slower. Short attempts raise replay cost. With only five solved games, read this as "didn't help here", not as a general result.
+5. **Candidate generation was not the failure.** Every action in the oracle's winning paths was in the agent's candidate set at the right state. The failing link is selection order and frontier control.
+6. **An unexplained gap in tu93.** The agent visited about 1,700 unique states, while the oracle's search through depth 14 found only 349 on the same game. Either the agent wanders far deeper than the solution, or the frame hash changes between visits to the same position. This is unresolved.
+
+## How it works
+
+**System 1 (graph explorer).** The method follows the graph-exploration approach of [arXiv:2512.24156](https://arxiv.org/abs/2512.24156): frames are turned into state representations, each (state, action) pair is a graph edge, and the agent prefers untested actions and navigates to the shallowest observed frontier by replaying known action paths after a RESET. Coordinate (click) actions are stored as distinct experiments, grouped by object class (colour, size, normalised shape) so one representative is tried first.
+
+**Optional search order (`CYRUS_SEARCH_ORDER=1`).** Iterative deepening (attempt depth 6, 12, 24, then 50) and iterative widening (simple actions before clicks at each state). Off by default.
+
+**System 2 (optional, disabled in all reported results).** `Cyrus/system2/` contains hypothesis, interaction-model and goal-inference components. System 2 takeover, learned ranking, the relational planner and the local LLM were switched off for the results above.
+
+**Oracle (diagnostic only).** `tools/oracle_dev_search.py` runs a breadth-first search over state hashes using game-state cloning. It exists to measure how short the solutions are. The agent never imports or calls it, and it contributes nothing to the evaluation.
+
+## Quick start
+
+Requires Python 3.12 and the ARC-AGI-3 framework.
+
+```
 make setup
 make play-local GAME=ls20
 ```
 
-The focused policy tests and the 25-game System 1 evaluation can be run with:
+Run the policy tests:
 
 ```powershell
-.\.venv\Scripts\python.exe -m unittest Cyrus.test_action_probe_policy
-
-$env:CYRUS_REACHABILITY_OUT = "research\system2\local_runs\flag_off"
-.\.venv\Scripts\python.exe scripts\reachability_system1.py --games ar25,bp35,cd82,cn04,dc22,ft09,g50t,ka59,lf52,lp85,ls20,m0r0,r11l,re86,s5i5,sb26,sc25,sk48,sp80,su15,tn36,tr87,tu93,vc33,wa30 --budgets 5000
-
-$env:CYRUS_REACHABILITY_OUT = "research\system2\local_runs\flag_on"
-.\.venv\Scripts\python.exe scripts\reachability_system1.py --games ar25,bp35,cd82,cn04,dc22,ft09,g50t,ka59,lf52,lp85,ls20,m0r0,r11l,re86,s5i5,sb26,sc25,sk48,sp80,su15,tn36,tr87,tu93,vc33,wa30 --budgets 5000 --search-order
+.\.venv\Scripts\python.exe -m unittest discover -s Cyrus -p "test_*.py"
 ```
 
-Each run uses seed 0, fresh memory for each game, and a 5,000-action budget
-including RESET actions. `--search-order` enables the optional search order;
-when `CYRUS_SEARCH_ORDER` is unset, it is off. Results are written to a
-timestamped directory under `CYRUS_REACHABILITY_OUT`.
+## Reproducing the results
 
-## Paired 25-game results
+PowerShell (Windows). Each run writes to a timestamped folder under `CYRUS_REACHABILITY_OUT`.
 
-The two final runs used the same local source snapshot and HEAD
-`c5fe794c21a032e7f22a3982e36c621e75c97e3b`, with the flag-off run completed
-first. The working tree was not clean, so the commit hash alone does not
-identify the complete source snapshot; the run directories contain the
-artifacts and the build ledger records source hashes and this caveat.
+```powershell
+$games = "ar25,bp35,cd82,cn04,dc22,ft09,g50t,ka59,lf52,lp85,ls20,m0r0,r11l,re86,s5i5,sb26,sc25,sk48,sp80,su15,tn36,tr87,tu93,vc33,wa30"
 
-The table reports final/peak confirmed levels, the first action at which a
-level advance was confirmed, and the local environment scorecard percentage.
-`-` means no confirmed level advance.
+# Default setting
+$env:CYRUS_REACHABILITY_OUT = "research\system2\local_runs\flag_off"
+.\.venv\Scripts\python.exe scripts\reachability_system1.py --games $games --budgets 5000
 
-| Game | Off final/peak | Off first level action | Off score % | On final/peak | On first level action | On score % |
-|---|---:|---:|---:|---:|---:|---:|
-| ar25 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| bp35 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| cd82 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| cn04 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| dc22 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| ft09 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| g50t | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| ka59 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| lf52 | 1/1 | 96 | 0.202020 | 1/1 | 159 | 0.073645 |
-| lp85 | 1/1 | 672 | 0.001778 | 1/1 | 679 | 0.001741 |
-| ls20 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| m0r0 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| r11l | 1/1 | 48 | 1.000331 | 1/1 | 845 | 0.003228 |
-| re86 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| s5i5 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| sb26 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| sc25 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| sk48 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| sp80 | 0/0 | - | 0.000000 | 1/1 | 4187 | 0.000413 |
-| su15 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| tn36 | 1/1 | 140 | 0.186589 | 0/0 | - | 0.000000 |
-| tr87 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| tu93 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
-| vc33 | 1/1 | 2099 | 0.000040 | 1/1 | 961 | 0.000189 |
-| wa30 | 0/0 | - | 0.000000 | 0/0 | - | 0.000000 |
+# With iterative deepening / widening
+$env:CYRUS_REACHABILITY_OUT = "research\system2\local_runs\flag_on"
+.\.venv\Scripts\python.exe scripts\reachability_system1.py --games $games --budgets 5000 --search-order
+```
 
-Each setting completed five levels across the suite. The mean scorecard was
-0.0556303% off and 0.00316867% on. Search order gained `sp80` at action 4,187
-and lost `tn36`; no game had fewer levels than its matching setting in the
-previous paired build. `ft09` and `sc25` exhausted the search before 5,000
-actions, without raising exceptions. The development game `ls20` completed no
-levels in either setting.
+Runs are deterministic: two runs of the same code at seed 0 gave matching results. Per-run output includes final and peak levels, first-level action, resets, experiments per reset, replay fraction, zero-length attempts and full-game resets (the last two were zero in all 50 game-runs).
 
-The predeclared acceptance checks all failed: `cd82` did not reach Level 1,
-`sp80` reached it only with search order at action 4,187 (threshold 714), and
-`tu93` did not reach Level 1 (threshold 1,751).
+## Repository layout
 
-### Score convention
+| Path | Purpose |
+|---|---|
+| `agent/my_agent.py` | Entry point exposing the agent to the ARC agent framework |
+| `Cyrus/frame_processor.py` | Observation to state representation and progress signals |
+| `Cyrus/graph_memory.py` | State graph, action signatures, transitions, frontier search |
+| `Cyrus/cyrus_agent.py` | Attempt and reset control, action selection |
+| `Cyrus/system2/` | Optional hypothesis and goal-inference components (disabled in reported results) |
+| `scripts/reachability_system1.py` | The 25-game evaluation runner |
+| `tools/oracle_dev_search.py` | Offline oracle for diagnostics (never used by the agent) |
+| `research/system2/BUILDS.md` | Build and run ledger with per-game tables and source hashes |
+| `vendor/ARC-AGI-3-Agents/` | Vendored ARC agent framework (MIT licence) |
 
-The score is the local ARC environment scorecard expressed as a percentage,
-not the percentage of games solved. For each level, the raw score is
-`min((baseline_actions / actions_taken)^2 * 100, 115)`. It is weighted by the
-one-based level number, averaged over the game’s total level weights, and
-capped by the completed-level weight fraction. RESET actions count toward
-actions taken.
+## Evaluation protocol and scoring
 
-The often-quoted `4.7619%` and the `66`-action entry are from different r11l
-runs. The October 23 run’s score was `4.761904...%`; the October 22 comparison
-entry at 66 actions reported `0.190476%`. The October 23 trace advanced after
-four actions and then continued to 64 total actions. In the six-level game,
-`4.7619%` is a Level 1 raw score of 100 weighted by `1 / (1+2+3+4+5+6)`.
-The 66-action entry must not be paired with that score.
-
-The paired run’s r11l flag-off result is a separate trajectory: Level 1 was
-confirmed at action 48. With its 22-action baseline, the raw level score is
-about 21.0069, and the Level 1 weight gives `1.000331%`. The flag-on run
-confirmed Level 1 at action 845 and scored `0.003228%`.
-
-## Reset/replay fix and known defect
-
-An earlier frontier/reset defect allowed an exhausted root to trigger empty
-attempts and unsafe repeated RESETs. The reset-safety changes prevent empty
-frontier attempts and avoid issuing a repeated RESET without intervening
-progress. With search order off, an unreachable frontier is cleared using the
-previous behavior; the reset-safety changes are the only intended behavior
-change in that setting.
-
-With search order enabled, a frontier remains pending when no observed replay
-path exists, so another opportunity to reach it can occur. If it has no replay
-path for three consecutive decisions, it is dropped and another frontier is
-selected. This path is opt-in; the environment variable is false when unset.
-The final paired runs recorded zero zero-length attempts and zero full-game
-resets in all 50 game-runs. A full-game reset is a RESET after which
-`levels_completed` drops to zero. These fixes address reset control, not the
-broader weakness in finding efficient solutions.
+- **Setup:** 25 cached game layouts, one layout per game, seed 0, fresh memory per game, 5,000 actions per game including RESET.
+- **Score:** the locally installed ARC environment scorecard, shown as a percentage. For each level the raw score is `min((baseline_actions / actions_taken)² × 100, 115)`, weighted by the one-based level number, averaged over the game's total level weights, and capped by the completed-level weight fraction. It is not the percentage of games solved.
+- **Per game versus mean:** a per-game percentage and a 25-game mean are different numbers. Earlier project notes mixed them up (for example, 4.76% for r11l was one run of one game that finished level 1 in 4 actions). All figures in this README are per-game scorecards or, where stated, the 25-game mean.
+- **Levels within a run:** the scorecard uses the final level count of a run, so progress lost to a full-game reset is lost for scoring.
+- **Dev and acceptance games:** ar25, cn04, dc22, ls20 and re86 were used for development, and cd82, sp80 and tu93 for design and acceptance tests. No game is a true held-out set.
 
 ## Limitations
 
-- Each game was tested on one cached layout with one seed (seed 0).
-- There is no true held-out set: all 25 games were used during development.
-- `ft09` and `sc25` ended on search exhaustion before the nominal action
-  budget; this does not establish that the games are unsolvable.
-- These are local results, not online competition results, and provide no
-  evidence of generalization to unseen layouts.
+- One cached layout and one seed per game. Seeds gave identical layouts, so there are no independent trials.
+- All 25 games were visible during development, so there is no clean held-out evaluation.
+- Results are local. They are not online competition results.
+- Five levels solved across 25 games is too few to conclude that one search setting is better than another.
+- ft09 and sc25 exhausted the search before 5,000 actions. This does not show that those games can't be solved.
+- The engine's full-reset behaviour is from the locally installed `arcengine`. The official evaluation's setting is unverified.
+- The tu93 state-count discrepancy (point 6 above) is unexplained.
+
+## References
+
+- ARC-AGI-3 benchmark: [arXiv:2603.24621](https://arxiv.org/abs/2603.24621)
+- Graph-Based Exploration for ARC-AGI-3 Interactive Reasoning Tasks: [arXiv:2512.24156](https://arxiv.org/abs/2512.24156). That paper reports a median of 30 solved levels out of 52 across six games on the ARC-AGI-3 Preview Challenge. Its game set and protocol differ from this repository's, so the results are not comparable.
 
 ## License
 
-There is no root-level project license. The vendored
-`vendor/ARC-AGI-3-Agents/LICENSE` is MIT; it permits use, modification, and
-redistribution subject to retaining the copyright and permission notice, and
-includes warranty and liability disclaimers. No new project license is
-asserted here.
+There is no project-wide license yet. The vendored `vendor/ARC-AGI-3-Agents/` is MIT-licensed and keeps its own `LICENSE` file. Add a license before reusing this code.
 
-Detailed runs, previous-build comparisons, and implementation history are in
-[`research/system2/BUILDS.md`](research/system2/BUILDS.md).
+---
+
+Built by Pushpak as an independent research project. Detailed run history is in [`research/system2/BUILDS.md`](research/system2/BUILDS.md).
