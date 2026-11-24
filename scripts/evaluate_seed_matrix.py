@@ -65,7 +65,6 @@ def run_one(arcade, AgentClass, game_id, seed, system2_on):
     memory.mkdir(parents=True, exist_ok=True)
     os.environ["CYRUS_SYSTEM2_ENABLED"] = "1" if system2_on else "0"
     os.environ["CYRUS_RELATIONAL_PLANNER_ENABLED"] = "0"
-    os.environ["CYRUS_LOCAL_LLM_ENABLED"] = "0"
     os.environ["CYRUS_LEARNING_MEMORY"] = str(memory / "learning.json")
     os.environ["CYRUS_GOAL_MEMORY"] = str(memory / "goals.json")
     os.environ["CYRUS_EXPERIMENT_LOG"] = str(memory / "experiments.jsonl")

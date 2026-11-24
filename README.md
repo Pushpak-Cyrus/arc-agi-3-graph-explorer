@@ -60,7 +60,7 @@ Three acceptance checks were set in advance (first level in at most 862 actions 
 
 **Optional search order (`CYRUS_SEARCH_ORDER=1`).** Iterative deepening (attempt depth 6, 12, 24, then 50) and iterative widening (simple actions before clicks at each state). Off by default.
 
-**System 2 (optional, disabled in all reported results).** `Cyrus/system2/` contains hypothesis, interaction-model and goal-inference components. System 2 takeover, learned ranking, the relational planner and the local LLM were switched off for the results above.
+**System 2 (optional, disabled in all reported results).** `Cyrus/system2/` contains hypothesis, interaction-model and goal-inference components. System 2 takeover, learned ranking and the relational planner were switched off for the results above.
 
 **Oracle (diagnostic only).** `tools/oracle_dev_search.py` runs a breadth-first search over state hashes using game-state cloning. It exists to measure how short the solutions are. The agent never imports or calls it, and it contributes nothing to the evaluation.
 
@@ -128,6 +128,7 @@ Runs are deterministic: two runs of the same code at seed 0 gave matching result
 - ft09 and sc25 exhausted the search before 5,000 actions. This does not show that those games can't be solved.
 - The engine's full-reset behaviour is from the locally installed `arcengine`. The official evaluation's setting is unverified.
 - The tu93 state-count discrepancy (point 6 above) is unexplained.
+- The experimental LLM heuristic pipeline was unsuccessful and is archived in [`archive/llm_pipeline/`](archive/llm_pipeline/README.md).
 
 ## References
 

@@ -52,3 +52,7 @@ This ledger records identifiable implementation milestones and saved evaluation/
 - **Acceptance and development checks:** all fixed thresholds failed. `cd82` reached no level; `sp80` reached Level 1 only with search order at 4,187 actions versus a 714-action threshold; `tu93` reached no level versus a 1,751-action threshold. Development game `ls20` reached no level in either setting.
 - **Reset/replay detail for ar25, g50t, and sb26:** in the preceding Phase 2 run, all resets were frontier resets (ar25 1,948; g50t 1,563; sb26 1,999), with zero GAME_OVER resets. Average replay lengths per attempt were 1.002, 1.994, and 1.002 actions, respectively. In the new flag-off run, ar25 had 105 frontier / 0 GAME_OVER resets and 1.991 replay actions per attempt; g50t had 348 / 0 and 8.708; sb26 had 135 / 0 and 1.632. In the new flag-on run, ar25 had 399 / 0 and 3.413; g50t had 127 frontier / 29 GAME_OVER resets and 4.866; sb26 had 465 / 0 and 2.517. Full-game resets were zero for all six game/setting pairs.
 - **Artifacts:** each run directory contains `README.md`, `runs.csv`, `runs.jsonl`, `summary.json`, and per-game `fresh_memory/` traces. The README at the repository root documents the score convention, paired per-game results, fix, and limitations.
+
+## Negative results
+
+- The experimental LLM heuristic pipeline produced no useful general heuristic; its artifacts and details are preserved in [`archive/llm_pipeline/`](../../archive/llm_pipeline/README.md).

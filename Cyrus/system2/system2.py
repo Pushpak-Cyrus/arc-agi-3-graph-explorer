@@ -40,7 +40,6 @@ from .action_effect_learner import (
 )
 from .goal_inference import GoalInference
 from .interaction_model import InteractionModel
-from .local_llm_advisor import LocalLLMAdvisor
 from .world_model import WorldModel
 
 
@@ -72,29 +71,12 @@ class System2:
         self.interactions = InteractionModel(
             memory_path=os.getenv("CYRUS_LEARNING_MEMORY")
         )
-        self.local_llm = LocalLLMAdvisor()
-        try:
-            self.local_llm_interval = max(
-                1, int(os.getenv("CYRUS_LOCAL_LLM_INTERVAL", "4"))
-            )
-        except ValueError:
-            self.local_llm_interval = 4
-        try:
-            self.local_llm_tie_epsilon = max(
-                0.0, min(0.25, float(
-                    os.getenv("CYRUS_LOCAL_LLM_TIE_EPSILON", "0.05")
-                ))
-            )
-        except ValueError:
-            self.local_llm_tie_epsilon = 0.05
         try:
             self.model_plan_weight = max(
                 0.0, min(5.0, float(os.getenv("CYRUS_MODEL_PLAN_WEIGHT", "1.0")))
             )
         except ValueError:
             self.model_plan_weight = 1.0
-        self._last_local_llm_step = -self.local_llm_interval
-        self._recent_advisor_history = deque(maxlen=8)
 
         self.steps = 0
         self.steps_since_progress = 0
@@ -133,28 +115,6 @@ class System2:
         planned_action = (
             plan["actions"][0] if plan and plan.get("actions") else None
         )
-
-        advice = None
-        if (self.local_llm.enabled
-                and self.steps - self._last_local_llm_step >= self.local_llm_interval):
-            self._last_local_llm_step = self.steps
-            advice = self.local_llm.advise(
-                state,
-                sigs,
-                self.action_effects.summary(),
-                list(self._recent_advisor_history),
-                self.goals.candidate_details(state, k=5),
-            )
-            if advice and os.getenv("CYRUS_LOCAL_LLM_DEBUG") == "1":
-                print(
-                    "[CYRUS][local-llm] hypotheses="
-                    f"{advice['hypotheses']} preferred={advice['preferred_action']} "
-                    f"confidence={advice['confidence']:.2f}"
-                )
-            elif self.local_llm.last_error and os.getenv("CYRUS_LOCAL_LLM_DEBUG") == "1":
-                print(f"[CYRUS][local-llm] unavailable: {self.local_llm.last_error}")
-
-        preferred_action = advice.get("preferred_action") if advice else None
 
         scored = []
         for sig in sigs:
@@ -207,19 +167,7 @@ class System2:
             ))
 
         best = max(scored, key=lambda row: (row[0], row[1]))
-        chosen_row = best
-        llm_tiebreak_accepted = False
-        if advice and preferred_action is not None:
-            preferred_row = next(
-                (row for row in scored if row[2] == preferred_action), None
-            )
-            if (preferred_row is not None
-                    and best[0] - preferred_row[0] <= self.local_llm_tie_epsilon):
-                chosen_row = preferred_row
-                llm_tiebreak_accepted = True
-
-        _, _, chosen, predictions, components, effect_context = chosen_row
-        components["local_llm_tiebreak_accepted"] = llm_tiebreak_accepted
+        _, _, chosen, predictions, components, effect_context = best
         self._pending = {
             "sig": chosen,
             "state_hash": state.get("hash"),
@@ -227,11 +175,6 @@ class System2:
             "effect_context": effect_context,
             "components": components,
             "controller": "system2",
-            "local_llm_advice": advice,
-            "local_llm_advice_applied": llm_tiebreak_accepted,
-            "local_llm_prediction": (
-                advice if advice and llm_tiebreak_accepted else None
-            ),
             "plan": plan if planned_action is not None else None,
         }
         return chosen
@@ -573,11 +516,6 @@ class System2:
             effect_context = self._pending.get("effect_context")
             components = self._pending["components"]
             controller = self._pending.get("controller", "unknown")
-            local_llm_advice = self._pending.get("local_llm_advice")
-            local_llm_advice_applied = self._pending.get(
-                "local_llm_advice_applied", False
-            )
-            local_llm_prediction = self._pending.get("local_llm_prediction")
         else:
             effect_context = self.action_effects.context(
                 self.interactions.selected_class,
@@ -593,25 +531,11 @@ class System2:
             )
             components = {}
             controller = "unknown"
-            local_llm_advice = None
-            local_llm_advice_applied = False
-            local_llm_prediction = None
 
         delta = diff_states(state_before, state_after)
         errors = self.world.record(
             sig, delta, predictions, context=effect_context
         )
-        local_llm_prediction_correct = LocalLLMAdvisor.prediction_correct(
-            local_llm_prediction, delta, confirmed_progress
-        )
-        if local_llm_advice is not None and local_llm_advice_applied:
-            self._recent_advisor_history.append({
-                "action": list(sig),
-                "changed_cells": delta.changed_cells,
-                "object_shifts": delta.shifts,
-                "confirmed_progress": bool(confirmed_progress),
-                "prediction_correct": local_llm_prediction_correct,
-            })
         action_effect_report = self.action_effects.observe(
             sig,
             state_before,
@@ -677,9 +601,6 @@ class System2:
                 "verified_effects": learned_action_effects,
             },
             "learned_palette_free_action_effects": learned_action_effects,
-            "local_llm_advice": local_llm_advice,
-            "local_llm_advice_applied": local_llm_advice_applied,
-            "local_llm_prediction_correct": local_llm_prediction_correct,
             "predicted": {str(k): v for k, v in predictions.items()},
             "errors": errors,
             "interaction_learning": interaction,
@@ -701,12 +622,6 @@ class System2:
             "steps_since_progress": self.steps_since_progress,
             "world": self.world.summary(),
             "action_effects": self.action_effects.summary(),
-            "local_llm": {
-                "enabled": self.local_llm.enabled,
-                "model": self.local_llm.model,
-                "calls": self.local_llm.calls,
-                "last_error": self.local_llm.last_error,
-            },
             "top_goals": self.goals.top(),
             "interactions": self.interactions.summary(),
         }

@@ -2,7 +2,7 @@
 
 Runs each locally cached game once per condition: System 2 takeover on/off
 crossed with System 1 learned-ranking reads on/off. The relational planner
-and local LLM are disabled in every headline condition. Every run has fresh
+is disabled in every headline condition. Every run has fresh
 memory files and the same action budget.
 """
 from __future__ import annotations
@@ -85,7 +85,6 @@ def run_one(arcade, agent_class, info_by_short_id, game_id, takeover, ranking,
     os.environ["CYRUS_SYSTEM2_ENABLED"] = "1" if takeover else "0"
     os.environ["CYRUS_LEARNED_RANKING_ENABLED"] = "1" if ranking else "0"
     os.environ["CYRUS_RELATIONAL_PLANNER_ENABLED"] = "0"
-    os.environ["CYRUS_LOCAL_LLM_ENABLED"] = "0"
     os.environ["CYRUS_LEARNING_MEMORY"] = str(memory / "learning.json")
     os.environ["CYRUS_GOAL_MEMORY"] = str(memory / "goals.json")
     os.environ["CYRUS_EXPERIMENT_LOG"] = str(memory / "experiments.jsonl")
@@ -506,7 +505,6 @@ def main():
         "action_budget": ACTION_BUDGET,
         "fresh_memory_per_run": True,
         "relational_planner_enabled": False,
-        "local_llm_enabled": False,
         "summary": summarize(results),
         "frame_change_baselines": baseline_summary,
     }

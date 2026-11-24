@@ -220,7 +220,6 @@ def run_game(arcade, AgentClass, game_id: str) -> dict:
     memory.mkdir(parents=True, exist_ok=True)
     os.environ["CYRUS_SYSTEM2_ENABLED"] = "1"
     os.environ["CYRUS_RELATIONAL_PLANNER_ENABLED"] = "0"
-    os.environ["CYRUS_LOCAL_LLM_ENABLED"] = "0"
     os.environ["CYRUS_LEARNING_MEMORY"] = str(memory / "learning.json")
     os.environ["CYRUS_GOAL_MEMORY"] = str(memory / "goals.json")
     os.environ["CYRUS_EXPERIMENT_LOG"] = str(memory / "experiments.jsonl")

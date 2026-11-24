@@ -1,7 +1,7 @@
 """Measure plain CYRUS System 1 reachability at 2k and 5k action budgets.
 
 Each game/budget pair gets seed 0 and fresh memory. System 2 takeover,
-learned ranking, relational planning, and the local LLM are disabled. RESET
+learned ranking, and relational planning are disabled. RESET
 calls count toward the scorecard and run budget, matching the ARC wrapper.
 """
 from __future__ import annotations
@@ -141,7 +141,6 @@ def run_one(arcade, infos, agent_class, game_id, budget):
         "CYRUS_FRONTIER_MODE": "1",
         "CYRUS_LEARNED_RANKING_ENABLED": "0",
         "CYRUS_RELATIONAL_PLANNER_ENABLED": "0",
-        "CYRUS_LOCAL_LLM_ENABLED": "0",
         "CYRUS_LEARNING_MEMORY": str(memory / "learning.json"),
         "CYRUS_GOAL_MEMORY": str(memory / "goals.json"),
         "CYRUS_EXPERIMENT_LOG": str(memory / "experiments.jsonl"),
@@ -439,7 +438,7 @@ def main():
         f"- Created UTC: {summary['created_utc']}\n"
         f"- Seed: {SEED}\n- Budgets: {budgets}\n"
         f"- Git commit: {commit}\n"
-        "- System 2 takeover, learned ranking, relational planner, and local LLM: off.\n"
+        "- System 2 takeover, learned ranking, and relational planner: off.\n"
         "- Fresh memory per game; RESET actions count toward budget and scorecard.\n"
         "- `CYRUS_FRONTIER_MODE=1` uses multi-action attempts and resets only "
         "at a local dead end or the per-attempt cap.\n"
